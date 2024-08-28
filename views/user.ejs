@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Hojas de Ruta</title>
     <link rel="stylesheet" href="/css/user.css">  <!-- Asegúrate de que la ruta sea correcta -->
-
 </head>
 <body>
     <h2>Hojas de Ruta Asignadas a Sucursal <%= userSucursal %></h2>
@@ -15,14 +14,22 @@
             <th>ID</th>
             <th>Fecha de Creación</th>
             <th>Estado</th>
+            <th>Fecha de Recepción</th>
             <th>Sucursal</th>
             <th>Acciones</th>
         </tr>
         <% routeSheets.forEach(sheet => { %>
         <tr>
             <td><%= sheet.id %></td>
-            <td><%= sheet.created_at %></td>
+            <td><%= new Date(sheet.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %></td>
             <td><%= sheet.status %></td>
+            <td>
+                <% if (sheet.received) { %>
+                    <%= new Date(sheet.fecha_recepcion).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %>
+                <% } else { %>
+                    <span>-</span>
+                <% } %>
+            </td>
             <td><%= sheet.sucursal %></td>
             <td>
                 <a href="/view-route/<%= sheet.id %>">Ver Detalles</a>

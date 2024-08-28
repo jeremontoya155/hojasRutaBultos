@@ -4,6 +4,7 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
+// Obtener las hojas de ruta para el usuario de la sucursal
 exports.getUserRouteSheets = async (req, res) => {
     const userSucursal = req.session.user.sucursal;
 
@@ -25,6 +26,7 @@ exports.getUserRouteSheets = async (req, res) => {
     }
 };
 
+// Ver los detalles de una hoja de ruta
 exports.viewRouteSheet = async (req, res) => {
     const routeSheetId = req.params.id;
     const user = req.session.user;
@@ -50,15 +52,16 @@ exports.viewRouteSheet = async (req, res) => {
     }
 };
 
+// Marcar hoja de ruta como recibida
 exports.markAsReceived = async (req, res) => {
     const routeSheetId = req.params.id;
     const user = req.session.user;
 
     try {
-        // Asegurarse de que el usuario solo pueda marcar como recibido las hojas de su sucursal
+        // Asegurarse de que el usuario solo pueda marcar como recibida las hojas de su sucursal y actualizar la fecha de recepción
         const result = await pool.query(`
             UPDATE route_sheets
-            SET received = TRUE
+            SET received = TRUE, fecha_recepcion = NOW()
             WHERE id = $1
             AND EXISTS (
                 SELECT 1
@@ -79,8 +82,7 @@ exports.markAsReceived = async (req, res) => {
     }
 };
 
-
-
+// Cargar la página de carga de nuevas hojas de ruta
 exports.loadRouteSheet = (req, res) => {
     res.render('load-route');
 };

@@ -92,6 +92,25 @@ a:hover {
     display: block;
 }
 
+/* Estilos para la fila de filtros */
+.filter-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.filter-row input {
+    padding: 10px;
+    width: 18%; /* Ancho ajustado */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.filter-row input::placeholder {
+    color: #888;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     body {
@@ -126,5 +145,14 @@ a:hover {
 
     tr:hover {
         background-color: transparent;
+    }
+
+    .filter-row {
+        flex-direction: column;
+    }
+
+    .filter-row input {
+        width: 100%;
+        margin-bottom: 10px;
     }
 }

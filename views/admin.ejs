@@ -5,31 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administración - Hojas de Ruta</title>
 
-    <link rel="stylesheet" href="/css/admin.css">  <!-- Enlace al CSS -->
+    <link rel="stylesheet" href="/css/admin.css"> <!-- Enlace al CSS -->
 </head>
 <body>
     <h2>Administración de Hojas de Ruta</h2>
 
     <div class="tab-buttons">
+        <!-- Botón para ver historial -->
         <button onclick="showTab('historial')">Ver Historial de Hojas de Ruta</button>
-        <button onclick="showTab('nueva')">Cargar Nueva Hoja de Ruta</button>
+        <!-- Botón para cargar nueva hoja de ruta, redirigiendo a la página de carga -->
+        <button onclick="window.location.href='/admin/load-route'">Cargar Nueva Hoja de Ruta</button>
     </div>
 
     <!-- Tab de Historial -->
     <div id="historial" class="tab active">
         <h3>Historial de Hojas de Ruta</h3>
-        <table border="1">
+
+        <!-- Filtros en la parte superior de la tabla -->
+        <div class="filter-row">
+            <input type="text" id="filterName" placeholder="Filtrar por Nombre" onkeyup="filterTable()">
+            <input type="text" id="filterCreationDate" placeholder="Filtrar por Fecha de Creación" onkeyup="filterTable()">
+            <input type="text" id="filterReceptionDate" placeholder="Filtrar por Fecha de Recepción" onkeyup="filterTable()">
+        
+            <!-- Filtro de Estado con un select -->
+            <select id="filterReceived" onchange="filterTable()">
+                <option value="">Filtrar por Estado</option>
+                <option value="recibido">Recibido</option>
+                <option value="en camino">En camino</option>
+            </select>
+        
+            <input type="text" id="filterRepartidor" placeholder="Filtrar por Repartidor" onkeyup="filterTable()">
+        </div>
+        
+        <table border="1" id="routeTable">
             <tr>
                 <th>ID</th>
+                <th>Nombre</th>
                 <th>Fecha de Creación</th>
+                <th>Fecha de Recepción</th>
                 <th>Estado</th>
+                <th>Repartidor</th>
                 <th>Acciones</th>
             </tr>
             <% routeSheets.forEach(sheet => { %>
             <tr>
                 <td><%= sheet.id %></td>
-                <td><%= sheet.created_at %></td>
-                <td><%= sheet.status %></td>
+                <td><%= sheet.nombrehojaruta %></td> <!-- Mostrar el nombre de la hoja de ruta -->
+                <td><%= new Date(sheet.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %></td>
+                <td>
+                    <% if (sheet.fecha_recepcion) { %>
+                        <%= new Date(sheet.fecha_recepcion).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %>
+                    <% } else { %>
+                        <span>-</span>
+                    <% } %>
+                </td>
+                <td>
+                    <% if (sheet.received) { %>
+                        <span>Recibido</span>
+                    <% } else { %>
+                        <span>En camino</span>
+                    <% } %>
+                </td>
+                <td><%= sheet.repartidor %></td>
                 <td>
                     <% if (sheet.status === 'pending') { %>
                         <a href="/admin/edit-route/<%= sheet.id %>">Editar</a> | 
@@ -38,11 +75,6 @@
                         <span>Enviado</span> | 
                         <a href="/admin/view-route/<%= sheet.id %>">Ver</a>
                     <% } %>
-                    <% if (sheet.received) { %>
-                        <span>Recibido</span>
-                    <% } else { %>
-                        <span>No Recibido</span>
-                    <% } %>
                 </td>
             </tr>
             <% }); %>
@@ -50,17 +82,54 @@
     </div>
 
     <!-- Tab para Cargar Nueva Hoja de Ruta -->
-    <div id="nueva" class="tab">
-        <h3>Cargar Nueva Hoja de Ruta</h3>
-        <a href="/admin/load-route">Ir a Cargar Nueva Hoja de Ruta</a>
-    </div>
-
+    <!-- Este bloque ha sido removido ya que redirigiremos con el botón de arriba -->
+    
     <script>
+        // Función para alternar entre pestañas
         function showTab(tabId) {
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             document.getElementById(tabId).classList.add('active');
+        }
+
+        // Activa la primera pestaña por defecto
+        document.addEventListener('DOMContentLoaded', () => {
+            showTab('historial');
+        });
+
+        // Función de filtro para la tabla
+        function filterTable() {
+            const filterName = document.getElementById('filterName').value.toLowerCase();
+            const filterCreationDate = document.getElementById('filterCreationDate').value.toLowerCase();
+            const filterReceptionDate = document.getElementById('filterReceptionDate').value.toLowerCase();
+            const filterReceived = document.getElementById('filterReceived').value.toLowerCase(); // Este es el filtro para el estado
+            const filterRepartidor = document.getElementById('filterRepartidor').value.toLowerCase();
+            const rows = document.querySelectorAll('#routeTable tr:not(:first-child)');
+
+            rows.forEach(row => {
+                const columns = row.querySelectorAll('td');
+                const name = columns[1].textContent.toLowerCase();
+                const creationDate = columns[2].textContent.toLowerCase();
+                const receptionDate = columns[3].textContent.toLowerCase();
+                const receivedText = columns[4].textContent.toLowerCase();  // Este es el texto en la columna de "Estado"
+                const repartidor = columns[5].textContent.toLowerCase();
+
+                // Comparación parcial para el estado, permitiendo coincidencias parciales
+                const matchesReceived = !filterReceived || receivedText.includes(filterReceived);
+
+                if (
+                    name.includes(filterName) &&
+                    creationDate.includes(filterCreationDate) &&
+                    receptionDate.includes(filterReceptionDate) &&
+                    matchesReceived &&
+                    repartidor.includes(filterRepartidor)
+                ) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
         }
     </script>
 </body>
