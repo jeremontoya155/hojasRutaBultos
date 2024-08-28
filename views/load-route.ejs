@@ -4,54 +4,130 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cargar Hoja de Ruta</title>
-    <link rel="stylesheet" href="/css/load-route.css">  <!-- Asegúrate de que la ruta sea correcta -->
-
+    <link rel="stylesheet" href="/css/load-route.css">
 </head>
 <body>
     <h2>Cargar Nueva Hoja de Ruta</h2>
 
-    <form action="/admin/create-route" method="POST">
-        <div id="route-sheet">
+    <form action="/admin/create-route" method="POST" id="routeForm">
+        <!-- Selección de repartidor -->
+        <div class="route-line">
+            <label for="repartidor">Repartidor:</label>
+            <select name="repartidor" id="repartidor" required>
+                <option value="" disabled selected>Selecciona un repartidor</option>
+                <% repartidores.forEach(repartidor => { %>
+                <option value="<%= repartidor.nombre %>" data-ruta="<%= repartidor.recorrido %>"><%= repartidor.nombre %></option>
+                <% }); %>
+            </select>
+        </div>
+
+        <!-- Selección de Sucursal y Escaneo de Códigos -->
+        <div id="route-sheet" style="display: none;">
             <div class="route-line">
-                <label>Sucursal:</label>
-                <input type="number" name="sucursal[]" required>
-
-                <label>Cantidad de Bultos:</label>
-                <input type="number" name="cantidad_bultos[]" required>
-
-                <label>Refrigerados:</label>
-                <select name="refrigerados[]" class="refrigerados-select">
-                    <option value="false">No</option>
-                    <option value="true">Sí</option>
+                <label for="sucursal">Sucursal:</label>
+                <select id="sucursal" name="sucursal" required>
+                    <option value="" disabled selected>Selecciona una sucursal</option>
                 </select>
+            </div>
 
-                <label>Cantidad de Refrigerados:</label>
-                <input type="number" name="cantidad_refrigerados[]" disabled>
+            <div class="route-line">
+                <button type="button" id="startScanning">Comenzar a Pistolear</button>
+            </div>
+
+            <div id="scanning-section" style="display: none;">
+                <h4>Pistolear Códigos</h4>
+                <input type="text" id="codigoQR" placeholder="Escanear código QR" autofocus>
+                <ul id="codigoList"></ul>
+                <button type="button" id="confirmSucursal" disabled>Confirmar Sucursal</button>
             </div>
         </div>
 
-        <button type="button" id="add-line">Agregar Línea</button>
-        <button type="submit">Guardar Hoja de Ruta</button>
+        <!-- Sección para el Resumen -->
+        <div id="summary-section" style="display: none;">
+            <h3>Resumen de Cargas</h3>
+            <ul id="summaryList"></ul>
+            <button type="button" id="finishLoading">Finalizar y Guardar Hoja de Ruta</button>
+        </div>
     </form>
 
     <script>
-        document.getElementById('add-line').addEventListener('click', () => {
-            const routeSheetDiv = document.getElementById('route-sheet');
-            const newLine = document.querySelector('.route-line').cloneNode(true);
-            newLine.querySelector('input[type="number"]').value = '';
-            newLine.querySelector('.refrigerados-select').value = 'false';
-            newLine.querySelector('[name="cantidad_refrigerados[]"]').value = '';
-            newLine.querySelector('[name="cantidad_refrigerados[]"]').disabled = true;
-            routeSheetDiv.appendChild(newLine);
+        // Inicializar elementos y variables
+        const repartidorSelect = document.getElementById('repartidor');
+        const sucursalSelect = document.getElementById('sucursal');
+        const codigoQRInput = document.getElementById('codigoQR');
+        let codigoList = [];
+        const summaryList = document.getElementById('summaryList');
+
+        repartidorSelect.addEventListener('change', function() {
+            const ruta = this.options[this.selectedIndex].getAttribute('data-ruta');
+            sucursalSelect.innerHTML = '<option value="" disabled selected>Selecciona una sucursal</option>';
+
+            if (ruta) {
+                const sucursales = ruta.split(',');
+                sucursales.forEach(sucursal => {
+                    const option = document.createElement('option');
+                    option.value = sucursal;
+                    option.textContent = sucursal;
+                    sucursalSelect.appendChild(option);
+                });
+
+                document.getElementById('route-sheet').style.display = 'block';
+            }
         });
 
-        document.addEventListener('change', function (e) {
-            if (e.target && e.target.className === 'refrigerados-select') {
-                const cantidadRefrigeradosInput = e.target.closest('.route-line').querySelector('[name="cantidad_refrigerados[]"]');
-                cantidadRefrigeradosInput.disabled = e.target.value === 'false';
-                if (cantidadRefrigeradosInput.disabled) {
-                    cantidadRefrigeradosInput.value = '';
+        document.getElementById('startScanning').addEventListener('click', () => {
+            document.getElementById('scanning-section').style.display = 'block';
+            codigoQRInput.focus();
+        });
+
+        // Maneja la entrada de códigos QR
+        codigoQRInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.trim()) {
+                e.preventDefault();  // Prevenir el comportamiento por defecto
+
+                const codigo = this.value.trim();
+
+                if (codigoList.includes(codigo)) {
+                    alert(`El código ${codigo} ya ha sido escaneado.`);
+                } else {
+                    codigoList.push(codigo);
+                    const li = document.createElement('li');
+                    li.textContent = codigo;
+                    document.getElementById('codigoList').appendChild(li);
                 }
+
+                this.value = '';  // Limpiar el campo de entrada
+                this.focus();  // Mantener el foco en el campo de entrada
+                document.getElementById('confirmSucursal').disabled = codigoList.length === 0;  // Habilitar el botón de confirmación solo si hay códigos
+            }
+        });
+
+        document.getElementById('confirmSucursal').addEventListener('click', () => {
+            const sucursal = sucursalSelect.value;
+            if (confirm(`¿Desea confirmar la carga para la sucursal ${sucursal}?`)) {
+                const li = document.createElement('li');
+                li.textContent = `Sucursal ${sucursal}: ${codigoList.length} códigos escaneados.`;
+                summaryList.appendChild(li);
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'data[]';
+                input.value = JSON.stringify({ sucursal: sucursal, codigos: codigoList });
+                document.getElementById('routeForm').appendChild(input);
+
+                codigoList = [];  // Resetear la lista de códigos
+                document.getElementById('codigoList').innerHTML = '';  // Limpiar la lista visible
+                document.getElementById('scanning-section').style.display = 'none';
+                document.getElementById('route-sheet').style.display = 'block';
+                sucursalSelect.value = '';  // Limpiar la selección de sucursal
+                document.getElementById('summary-section').style.display = 'block';
+                document.getElementById('confirmSucursal').disabled = true;  // Deshabilitar el botón de confirmación hasta que se escanee otro código
+            }
+        });
+
+        document.getElementById('finishLoading').addEventListener('click', () => {
+            if (confirm('¿Desea guardar la hoja de ruta?')) {
+                document.getElementById('routeForm').submit();
             }
         });
     </script>
