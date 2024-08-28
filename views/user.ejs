@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Hojas de Ruta</title>
+</head>
+<body>
+    <h2>Hojas de Ruta Asignadas a Sucursal <%= userSucursal %></h2>
+
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Fecha de Creación</th>
+            <th>Estado</th>
+            <th>Sucursal</th>
+            <th>Acciones</th>
+        </tr>
+        <% routeSheets.forEach(sheet => { %>
+        <tr>
+            <td><%= sheet.id %></td>
+            <td><%= sheet.created_at %></td>
+            <td><%= sheet.status %></td>
+            <td><%= sheet.sucursal %></td>
+            <td>
+                <a href="/view-route/<%= sheet.id %>">Ver Detalles</a>
+                <% if (sheet.status === 'sent' && !sheet.received) { %>
+                    | <a href="/mark-received/<%= sheet.id %>">Marcar como Recibido</a>
+                <% } else if (sheet.received) { %>
+                    | <span>Recibido</span>
+                <% } %>
+            </td>
+        </tr>
+        <% }); %>
+    </table>
+</body>
+</html>

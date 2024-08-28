@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista de Reparto - Hojas de Ruta</title>
+</head>
+<body>
+    <h2>Vista Completa de Hojas de Ruta</h2>
+
+    <% if (routeSheets.length > 0) { %>
+        <% routeSheets.forEach(sheet => { %>
+            <h3>Hoja de Ruta ID: <%= sheet.id %> - Estado: <%= sheet.status %> - Recibido: <%= sheet.received ? 'Sí' : 'No' %></h3>
+            <table border="1">
+                <tr>
+                    <th>Sucursal</th>
+                    <th>Cantidad de Bultos</th>
+                    <th>Refrigerados</th>
+                    <th>Cantidad de Refrigerados</th>
+                </tr>
+                <% sheet.details.forEach(detail => { %>
+                <tr>
+                    <td><%= detail.sucursal %></td>
+                    <td><%= detail.cantidad_bultos %></td>
+                    <td><%= detail.refrigerados ? 'Sí' : 'No' %></td>
+                    <td><%= detail.refrigerados ? detail.cantidad_refrigerados : '-' %></td>
+                </tr>
+                <% }); %>
+            </table>
+        <% }); %>
+    <% } else { %>
+        <p>No se encontraron hojas de ruta.</p>
+    <% } %>
+
+    <a href="/my-routes">Volver a mis rutas</a>
+</body>
+</html>

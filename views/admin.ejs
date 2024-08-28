@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración - Hojas de Ruta</title>
+    <style>
+        .tab {
+            display: none;
+        }
+        .tab.active {
+            display: block;
+        }
+        .tab-buttons {
+            margin-bottom: 20px;
+        }
+        .tab-buttons button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h2>Administración de Hojas de Ruta</h2>
+
+    <div class="tab-buttons">
+        <button onclick="showTab('historial')">Ver Historial de Hojas de Ruta</button>
+        <button onclick="showTab('nueva')">Cargar Nueva Hoja de Ruta</button>
+    </div>
+
+    <!-- Tab de Historial -->
+    <div id="historial" class="tab active">
+        <h3>Historial de Hojas de Ruta</h3>
+        <table border="1">
+            <tr>
+                <th>ID</th>
+                <th>Fecha de Creación</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+            <% routeSheets.forEach(sheet => { %>
+            <tr>
+                <td><%= sheet.id %></td>
+                <td><%= sheet.created_at %></td>
+                <td><%= sheet.status %></td>
+                <td>
+                    <% if (sheet.status === 'pending') { %>
+                        <a href="/admin/edit-route/<%= sheet.id %>">Editar</a> | 
+                        <a href="/admin/send-route/<%= sheet.id %>">Enviar</a>
+                    <% } else if (sheet.status === 'sent') { %>
+                        <span>Enviado</span> | 
+                        <a href="/admin/view-route/<%= sheet.id %>">Ver</a>
+                    <% } %>
+                    <% if (sheet.received) { %>
+                        <span>Recibido</span>
+                    <% } else { %>
+                        <span>No Recibido</span>
+                    <% } %>
+                </td>
+            </tr>
+            <% }); %>
+        </table>
+    </div>
+
+    <!-- Tab para Cargar Nueva Hoja de Ruta -->
+    <div id="nueva" class="tab">
+        <h3>Cargar Nueva Hoja de Ruta</h3>
+        <a href="/admin/load-route">Ir a Cargar Nueva Hoja de Ruta</a>
+    </div>
+
+    <script>
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+        }
+    </script>
+</body>
+</html>

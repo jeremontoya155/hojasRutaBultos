@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Hoja de Ruta</title>
+</head>
+<body>
+    <h2>Editar Hoja de Ruta</h2>
+
+    <form action="/admin/update-route/<%= routeSheetId %>" method="POST">
+        <div id="route-sheet">
+            <% routeSheetDetails.forEach((detail, index) => { %>
+            <div class="route-line">
+                <label>Sucursal:</label>
+                <input type="number" name="sucursal[]" value="<%= detail.sucursal %>" required>
+
+                <label>Cantidad de Bultos:</label>
+                <input type="number" name="cantidad_bultos[]" value="<%= detail.cantidad_bultos %>" required>
+
+                <label>Refrigerados:</label>
+                <select name="refrigerados[]" class="refrigerados-select">
+                    <option value="false" <%= detail.refrigerados ? '' : 'selected' %>>No</option>
+                    <option value="true" <%= detail.refrigerados ? 'selected' : '' %>>Sí</option>
+                </select>
+
+                <label>Cantidad de Refrigerados:</label>
+                <input type="number" name="cantidad_refrigerados[]" value="<%= detail.refrigerados ? detail.cantidad_refrigerados : '' %>" <%= detail.refrigerados ? '' : 'disabled' %>>
+            </div>
+            <% }); %>
+        </div>
+
+        <button type="button" id="add-line">Agregar Línea</button>
+        <button type="submit">Guardar Cambios</button>
+    </form>
+
+    <script>
+        document.getElementById('add-line').addEventListener('click', () => {
+            const routeSheetDiv = document.getElementById('route-sheet');
+            const newLine = document.querySelector('.route-line').cloneNode(true);
+            newLine.querySelector('input[type="number"]').value = '';
+            newLine.querySelector('.refrigerados-select').value = 'false';
+            newLine.querySelector('[name="cantidad_refrigerados[]"]').value = '';
+            newLine.querySelector('[name="cantidad_refrigerados[]"]').disabled = true;
+            routeSheetDiv.appendChild(newLine);
+        });
+
+        document.addEventListener('change', function (e) {
+            if (e.target && e.target.className === 'refrigerados-select') {
+                const cantidadRefrigeradosInput = e.target.closest('.route-line').querySelector('[name="cantidad_refrigerados[]"]');
+                cantidadRefrigeradosInput.disabled = e.target.value === 'false';
+                if (cantidadRefrigeradosInput.disabled) {
+                    cantidadRefrigeradosInput.value = '';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

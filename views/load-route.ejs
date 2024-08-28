@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargar Hoja de Ruta</title>
+</head>
+<body>
+    <h2>Cargar Nueva Hoja de Ruta</h2>
+
+    <form action="/admin/create-route" method="POST">
+        <div id="route-sheet">
+            <div class="route-line">
+                <label>Sucursal:</label>
+                <input type="number" name="sucursal[]" required>
+
+                <label>Cantidad de Bultos:</label>
+                <input type="number" name="cantidad_bultos[]" required>
+
+                <label>Refrigerados:</label>
+                <select name="refrigerados[]" class="refrigerados-select">
+                    <option value="false">No</option>
+                    <option value="true">Sí</option>
+                </select>
+
+                <label>Cantidad de Refrigerados:</label>
+                <input type="number" name="cantidad_refrigerados[]" disabled>
+            </div>
+        </div>
+
+        <button type="button" id="add-line">Agregar Línea</button>
+        <button type="submit">Guardar Hoja de Ruta</button>
+    </form>
+
+    <script>
+        document.getElementById('add-line').addEventListener('click', () => {
+            const routeSheetDiv = document.getElementById('route-sheet');
+            const newLine = document.querySelector('.route-line').cloneNode(true);
+            newLine.querySelector('input[type="number"]').value = '';
+            newLine.querySelector('.refrigerados-select').value = 'false';
+            newLine.querySelector('[name="cantidad_refrigerados[]"]').value = '';
+            newLine.querySelector('[name="cantidad_refrigerados[]"]').disabled = true;
+            routeSheetDiv.appendChild(newLine);
+        });
+
+        document.addEventListener('change', function (e) {
+            if (e.target && e.target.className === 'refrigerados-select') {
+                const cantidadRefrigeradosInput = e.target.closest('.route-line').querySelector('[name="cantidad_refrigerados[]"]');
+                cantidadRefrigeradosInput.disabled = e.target.value === 'false';
+                if (cantidadRefrigeradosInput.disabled) {
+                    cantidadRefrigeradosInput.value = '';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
