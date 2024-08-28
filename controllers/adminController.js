@@ -108,13 +108,16 @@ exports.loadRouteSheet = (req, res) => {
 
 
 exports.viewRouteSheet = async (req, res) => {
-    const routeSheetId = req.params.id;
+    const routeSheetId = req.params.id;  // Obtiene el ID desde los parámetros de la URL
+
     try {
         const result = await pool.query('SELECT * FROM route_sheet_details WHERE route_sheet_id = $1', [routeSheetId]);
         const routeSheetDetails = result.rows;
-        res.render('view-route', { routeSheetDetails });
+
+        res.render('view-route', { routeSheetId, routeSheetDetails });  // Pasa el ID y los detalles a la vista
     } catch (err) {
         console.error(err);
-        res.send('Error al ver la hoja de ruta.');
+        res.send('Error al obtener los detalles de la hoja de ruta.');
     }
 };
+

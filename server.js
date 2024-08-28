@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const path = require('path');  // Necesario para manejar rutas correctamente
 const app = express();
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -18,6 +19,9 @@ app.use(session({
     cookie: { secure: false }
 }));
 
+// Configuración para servir archivos estáticos desde la carpeta 'public'
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.use('/', authRoutes);
 app.use('/admin', adminRoutes);
 app.use('/', userRoutes);
@@ -26,4 +30,3 @@ app.use('/', repartoRoutes);  // Usar las rutas para reparto
 app.listen(process.env.PORT || 3000, () => {
     console.log(`Servidor corriendo en el puerto ${process.env.PORT || 3000}`);
 });
-
