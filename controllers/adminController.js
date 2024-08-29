@@ -79,18 +79,26 @@ exports.receiveRouteSheet = async (req, res) => {
         res.send('Error al marcar como recibida la hoja de ruta.');
     }
 };
-
 exports.editRouteSheet = async (req, res) => {
     const routeSheetId = req.params.id;
     try {
-        const result = await pool.query('SELECT * FROM route_sheet_details WHERE route_sheet_id = $1', [routeSheetId]);
-        const routeSheetDetails = result.rows;
-        res.render('edit-route', { routeSheetId, routeSheetDetails });
+        // Obtener la hoja de ruta
+        const routeSheetResult = await pool.query('SELECT * FROM route_sheets WHERE id = $1', [routeSheetId]);
+        const routeSheet = routeSheetResult.rows[0];
+
+        // Obtener los detalles de la hoja de ruta
+        const detailsResult = await pool.query('SELECT * FROM route_sheet_details WHERE route_sheet_id = $1', [routeSheetId]);
+        const routeSheetDetails = detailsResult.rows;
+
+        res.render('edit-route', { routeSheetId, routeSheet, routeSheetDetails });
     } catch (err) {
         console.error(err);
-        res.send('Error al editar la hoja de ruta.');
+        res.send('Error al obtener los datos de la hoja de ruta.');
     }
 };
+
+
+
 
 exports.updateRouteSheet = async (req, res) => {
     const routeSheetId = req.params.id;

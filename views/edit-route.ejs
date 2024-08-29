@@ -3,33 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Hoja de Ruta</title>
+    <title>Editar Hoja de Ruta ID: <%= routeSheetId %></title>
     <link rel="stylesheet" href="/css/edit-route.css">  <!-- Asegúrate de que la ruta sea correcta -->
-
 </head>
 <body>
-    <h2>Editar Hoja de Ruta</h2>
+    <h2>Editar Hoja de Ruta ID: <%= routeSheetId %></h2>
 
     <form action="/admin/update-route/<%= routeSheetId %>" method="POST">
         <div id="route-sheet">
-            <% routeSheetDetails.forEach((detail, index) => { %>
-            <div class="route-line">
-                <label>Sucursal:</label>
-                <input type="number" name="sucursal[]" value="<%= detail.sucursal %>" required>
+            <% if (routeSheetDetails.length > 0) { %>
+                <% routeSheetDetails.forEach((detail, index) => { %>
+                <div class="route-line" data-index="<%= index %>">
+                    <label>Sucursal:</label>
+                    <input type="number" name="sucursal[]" value="<%= detail.sucursal %>" required>
 
-                <label>Cantidad de Bultos:</label>
-                <input type="number" name="cantidad_bultos[]" value="<%= detail.cantidad_bultos %>" required>
+                    <label>Cantidad de Bultos:</label>
+                    <input type="number" name="cantidad_bultos[]" value="<%= detail.cantidad_bultos %>" required>
 
-                <label>Refrigerados:</label>
-                <select name="refrigerados[]" class="refrigerados-select">
-                    <option value="false" <%= detail.refrigerados ? '' : 'selected' %>>No</option>
-                    <option value="true" <%= detail.refrigerados ? 'selected' : '' %>>Sí</option>
-                </select>
+                    <label>Refrigerados:</label>
+                    <select name="refrigerados[]">
+                        <option value="false" <%= !detail.refrigerados ? 'selected' : '' %>>No</option>
+                        <option value="true" <%= detail.refrigerados ? 'selected' : '' %>>Sí</option>
+                    </select>
 
-                <label>Cantidad de Refrigerados:</label>
-                <input type="number" name="cantidad_refrigerados[]" value="<%= detail.refrigerados ? detail.cantidad_refrigerados : '' %>" <%= detail.refrigerados ? '' : 'disabled' %>>
-            </div>
-            <% }); %>
+                    <label>Cantidad de Refrigerados:</label>
+                    <input type="number" name="cantidad_refrigerados[]" value="<%= detail.refrigerados ? detail.cantidad_refrigerados : '' %>" <%= detail.refrigerados ? '' : 'disabled' %>>
+                </div>
+                <% }); %>
+            <% } else { %>
+                <p>No hay detalles disponibles para esta hoja de ruta.</p>
+            <% } %>
         </div>
 
         <button type="button" id="add-line">Agregar Línea</button>
@@ -39,20 +42,36 @@
     <script>
         document.getElementById('add-line').addEventListener('click', () => {
             const routeSheetDiv = document.getElementById('route-sheet');
-            const newLine = document.querySelector('.route-line').cloneNode(true);
-            newLine.querySelector('input[type="number"]').value = '';
-            newLine.querySelector('.refrigerados-select').value = 'false';
-            newLine.querySelector('[name="cantidad_refrigerados[]"]').value = '';
-            newLine.querySelector('[name="cantidad_refrigerados[]"]').disabled = true;
+            const index = routeSheetDiv.children.length;
+            const newLine = document.createElement('div');
+            newLine.className = 'route-line';
+            newLine.innerHTML = `
+                <label>Sucursal:</label>
+                <input type="number" name="sucursal[]" required>
+
+                <label>Cantidad de Bultos:</label>
+                <input type="number" name="cantidad_bultos[]" required>
+
+                <label>Refrigerados:</label>
+                <select name="refrigerados[]">
+                    <option value="false">No</option>
+                    <option value="true">Sí</option>
+                </select>
+
+                <label>Cantidad de Refrigerados:</label>
+                <input type="number" name="cantidad_refrigerados[]" disabled>
+            `;
             routeSheetDiv.appendChild(newLine);
         });
 
-        document.addEventListener('change', function (e) {
-            if (e.target && e.target.className === 'refrigerados-select') {
-                const cantidadRefrigeradosInput = e.target.closest('.route-line').querySelector('[name="cantidad_refrigerados[]"]');
-                cantidadRefrigeradosInput.disabled = e.target.value === 'false';
-                if (cantidadRefrigeradosInput.disabled) {
-                    cantidadRefrigeradosInput.value = '';
+        document.addEventListener('change', function(event) {
+            if (event.target.name === 'refrigerados[]') {
+                const routeLine = event.target.closest('.route-line');
+                const cantidadRefrigerados = routeLine.querySelector('input[name="cantidad_refrigerados[]"]');
+                if (event.target.value === 'true') {
+                    cantidadRefrigerados.disabled = false;
+                } else {
+                    cantidadRefrigerados.disabled = true;
                 }
             }
         });

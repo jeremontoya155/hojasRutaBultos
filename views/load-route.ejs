@@ -49,6 +49,11 @@
             <button type="submit" id="finishLoading">Finalizar y Guardar Hoja de Ruta</button>
         </div>
     </form>
+
+    <!-- Botón para eliminar códigos seleccionados -->
+    <div class="route-line" id="delete-section" style="display: none;">
+        <button type="button" id="deleteSelected">Eliminar Códigos Seleccionados</button>
+    </div>
     
     <script>
         const repartidorSelect = document.getElementById('repartidor');
@@ -56,7 +61,8 @@
         const codigoQRInput = document.getElementById('codigoQR');
         let codigoList = [];
         const summaryList = document.getElementById('summaryList');
-    
+        const deleteSection = document.getElementById('delete-section');
+
         repartidorSelect.addEventListener('change', function() {
             const ruta = this.options[this.selectedIndex].getAttribute('data-ruta');
             sucursalSelect.innerHTML = '<option value="" disabled selected>Selecciona una sucursal</option>';
@@ -89,13 +95,14 @@
                 } else {
                     codigoList.push(codigo);
                     const li = document.createElement('li');
-                    li.textContent = codigo;
+                    li.innerHTML = `<input type="checkbox" class="codigo-checkbox"> ${codigo}`;
                     document.getElementById('codigoList').appendChild(li);
                 }
     
                 this.value = '';
                 this.focus();
                 document.getElementById('confirmSucursal').disabled = codigoList.length === 0;
+                deleteSection.style.display = 'block'; // Mostrar la sección de eliminar cuando haya códigos
             }
         });
     
@@ -121,6 +128,22 @@
                 sucursalSelect.value = '';
                 document.getElementById('summary-section').style.display = 'block';
                 document.getElementById('confirmSucursal').disabled = true;
+                deleteSection.style.display = 'none'; // Ocultar la sección de eliminar después de confirmar
+            }
+        });
+
+        // Función para eliminar los códigos seleccionados
+        document.getElementById('deleteSelected').addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.codigo-checkbox:checked');
+            checkboxes.forEach(checkbox => {
+                const li = checkbox.parentElement;
+                const codigo = li.textContent.trim();
+                codigoList = codigoList.filter(c => c !== codigo);
+                li.remove();
+            });
+            document.getElementById('confirmSucursal').disabled = codigoList.length === 0;
+            if (codigoList.length === 0) {
+                deleteSection.style.display = 'none'; // Ocultar la sección de eliminar si no hay códigos
             }
         });
     
@@ -133,3 +156,4 @@
     
 </body>
 </html>
+

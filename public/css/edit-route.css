@@ -43,7 +43,8 @@ form {
 }
 
 .route-line input[type="number"],
-.route-line select {
+.route-line select,
+.route-line textarea {
     flex: 2 1 200px;
     padding: 10px;
     border: 1px solid #ccc;
@@ -53,6 +54,12 @@ form {
 
 .route-line input[type="number"]:disabled {
     background-color: #eaeaea;
+}
+
+.route-line textarea {
+    resize: none;
+    font-family: inherit;
+    background-color: #f9f9f9;
 }
 
 button {
