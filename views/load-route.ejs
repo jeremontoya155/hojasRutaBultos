@@ -20,7 +20,7 @@
                 <% }); %>
             </select>
         </div>
-
+    
         <!-- Selección de Sucursal y Escaneo de Códigos -->
         <div id="route-sheet" style="display: none;">
             <div class="route-line">
@@ -29,11 +29,11 @@
                     <option value="" disabled selected>Selecciona una sucursal</option>
                 </select>
             </div>
-
+    
             <div class="route-line">
                 <button type="button" id="startScanning">Comenzar a Pistolear</button>
             </div>
-
+    
             <div id="scanning-section" style="display: none;">
                 <h4>Pistolear Códigos</h4>
                 <input type="text" id="codigoQR" placeholder="Escanear código QR" autofocus>
@@ -41,27 +41,26 @@
                 <button type="button" id="confirmSucursal" disabled>Confirmar Sucursal</button>
             </div>
         </div>
-
+    
         <!-- Sección para el Resumen -->
         <div id="summary-section" style="display: none;">
             <h3>Resumen de Cargas</h3>
             <ul id="summaryList"></ul>
-            <button type="button" id="finishLoading">Finalizar y Guardar Hoja de Ruta</button>
+            <button type="submit" id="finishLoading">Finalizar y Guardar Hoja de Ruta</button>
         </div>
     </form>
-
+    
     <script>
-        // Inicializar elementos y variables
         const repartidorSelect = document.getElementById('repartidor');
         const sucursalSelect = document.getElementById('sucursal');
         const codigoQRInput = document.getElementById('codigoQR');
         let codigoList = [];
         const summaryList = document.getElementById('summaryList');
-
+    
         repartidorSelect.addEventListener('change', function() {
             const ruta = this.options[this.selectedIndex].getAttribute('data-ruta');
             sucursalSelect.innerHTML = '<option value="" disabled selected>Selecciona una sucursal</option>';
-
+    
             if (ruta) {
                 const sucursales = ruta.split(',');
                 sucursales.forEach(sucursal => {
@@ -70,23 +69,21 @@
                     option.textContent = sucursal;
                     sucursalSelect.appendChild(option);
                 });
-
+    
                 document.getElementById('route-sheet').style.display = 'block';
             }
         });
-
+    
         document.getElementById('startScanning').addEventListener('click', () => {
             document.getElementById('scanning-section').style.display = 'block';
             codigoQRInput.focus();
         });
-
-        // Maneja la entrada de códigos QR
+    
         codigoQRInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && this.value.trim()) {
-                e.preventDefault();  // Prevenir el comportamiento por defecto
-
+                e.preventDefault();
                 const codigo = this.value.trim();
-
+    
                 if (codigoList.includes(codigo)) {
                     alert(`El código ${codigo} ya ha sido escaneado.`);
                 } else {
@@ -95,41 +92,44 @@
                     li.textContent = codigo;
                     document.getElementById('codigoList').appendChild(li);
                 }
-
-                this.value = '';  // Limpiar el campo de entrada
-                this.focus();  // Mantener el foco en el campo de entrada
-                document.getElementById('confirmSucursal').disabled = codigoList.length === 0;  // Habilitar el botón de confirmación solo si hay códigos
+    
+                this.value = '';
+                this.focus();
+                document.getElementById('confirmSucursal').disabled = codigoList.length === 0;
             }
         });
-
+    
         document.getElementById('confirmSucursal').addEventListener('click', () => {
             const sucursal = sucursalSelect.value;
+            const cantidadBultos = codigoList.length;
+    
             if (confirm(`¿Desea confirmar la carga para la sucursal ${sucursal}?`)) {
                 const li = document.createElement('li');
-                li.textContent = `Sucursal ${sucursal}: ${codigoList.length} códigos escaneados.`;
+                li.textContent = `Sucursal ${sucursal}: ${cantidadBultos} códigos escaneados.`;
                 summaryList.appendChild(li);
-
+    
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'data[]';
                 input.value = JSON.stringify({ sucursal: sucursal, codigos: codigoList });
                 document.getElementById('routeForm').appendChild(input);
-
-                codigoList = [];  // Resetear la lista de códigos
-                document.getElementById('codigoList').innerHTML = '';  // Limpiar la lista visible
+    
+                codigoList = [];
+                document.getElementById('codigoList').innerHTML = '';
                 document.getElementById('scanning-section').style.display = 'none';
                 document.getElementById('route-sheet').style.display = 'block';
-                sucursalSelect.value = '';  // Limpiar la selección de sucursal
+                sucursalSelect.value = '';
                 document.getElementById('summary-section').style.display = 'block';
-                document.getElementById('confirmSucursal').disabled = true;  // Deshabilitar el botón de confirmación hasta que se escanee otro código
+                document.getElementById('confirmSucursal').disabled = true;
             }
         });
-
+    
         document.getElementById('finishLoading').addEventListener('click', () => {
             if (confirm('¿Desea guardar la hoja de ruta?')) {
                 document.getElementById('routeForm').submit();
             }
         });
     </script>
+    
 </body>
 </html>

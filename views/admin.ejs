@@ -73,9 +73,10 @@
                         <a href="/admin/send-route/<%= sheet.id %>">Enviar</a>
                     <% } else if (sheet.status === 'sent') { %>
                         <span>Enviado</span> | 
-                        <a href="/admin/view-route/<%= sheet.id %>">Ver</a>
+                        <a href="/admin/view-route-general/<%= sheet.id %>">Ver</a> <!-- Enlace modificado -->
                     <% } %>
                 </td>
+                
             </tr>
             <% }); %>
         </table>

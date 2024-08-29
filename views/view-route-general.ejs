@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumen General de la Hoja de Ruta ID: <%= routeSheetId %></title>
+    <link rel="stylesheet" href="/css/admin.css"> <!-- Puedes ajustar el enlace al CSS -->
+</head>
+<body>
+    <h2>Resumen General de la Hoja de Ruta ID: <%= routeSheetId %></h2>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Sucursal</th>
+                <th>Cantidad de Bultos</th>
+                <th>Refrigerados</th>
+                <th>Cantidad de Refrigerados</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (routeSheetDetails.length > 0) { %>
+                <% routeSheetDetails.forEach(detail => { %>
+                <tr>
+                    <td><%= detail.sucursal %></td>
+                    <td><%= detail.cantidad_bultos %></td>
+                    <td><%= detail.refrigerados ? 'Sí' : 'No' %></td>
+                    <td><%= detail.refrigerados ? detail.cantidad_refrigerados : '-' %></td>
+                    <td>
+                        <a href="/admin/route-detail/<%= routeSheetId %>/<%= detail.sucursal %>">Ver Detalles</a>
+                    </td>
+                </tr>
+                <% }); %>
+            <% } else { %>
+                <tr>
+                    <td colspan="5">No hay detalles disponibles para esta hoja de ruta.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+    
+
+    <a href="/admin">Volver a mis hojas de ruta</a>
+</body>
+</html>
+
+

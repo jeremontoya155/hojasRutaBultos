@@ -3,23 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/route-details.css">
-    <title>Detalles de Sucursal <%= sucursal %></title>
+    <title>Detalles de la Sucursal en la Hoja de Ruta</title>
+    <link rel="stylesheet" href="/css/detail-route.css"> 
 </head>
 <body>
     <h2>Detalles de la Sucursal <%= sucursal %> en la Hoja de Ruta ID: <%= routeSheetId %></h2>
 
+    <input type="text" id="filterInput" placeholder="Filtrar por código de barra...">
+
     <table border="1">
-        <tr>
-            <th>Código Escaneado</th>
-        </tr>
-        <% routeSheetDetails.forEach(detail => { %>
-        <tr>
-            <td><%= detail.codigo %></td>
-        </tr>
-        <% }); %>
+        <thead>
+            <tr>
+                <th>ID del Código</th>
+                <th>Código</th>
+            </tr>
+        </thead>
+        <tbody id="codeTable">
+            <% routeSheetDetails.forEach(detail => { %>
+            <tr>
+                <td><%= detail.id %></td>
+                <td><%= detail.codigo %></td>
+            </tr>
+            <% }); %>
+        </tbody>
     </table>
 
-    <a href="/route-general/<%= routeSheetId %>">Volver al resumen general</a>
+    <p id="noResults">No se encontraron resultados.</p>
+
+    <a href="/admin/view-route-general/<%= routeSheetId %>">Volver al Resumen General</a>
+
+    <script>
+        // Filtro de tabla
+        document.getElementById('filterInput').addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#codeTable tr');
+            let visibleRows = 0;
+
+            rows.forEach(row => {
+                const codeCell = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                if (codeCell.includes(filter)) {
+                    row.style.display = '';
+                    visibleRows++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            document.getElementById('noResults').style.display = visibleRows ? 'none' : 'block';
+        });
+    </script>
 </body>
 </html>
