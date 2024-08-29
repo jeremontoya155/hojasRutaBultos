@@ -14,6 +14,7 @@ exports.getRouteSheets = async (req, res) => {
         res.send('Error al obtener las hojas de ruta.');
     }
 };
+
 exports.createRouteSheet = async (req, res) => {
     const { repartidor, data } = req.body;
 
@@ -66,8 +67,6 @@ exports.createRouteSheet = async (req, res) => {
     }
 };
 
-
-
 exports.receiveRouteSheet = async (req, res) => {
     const routeSheetId = req.params.id;
 
@@ -79,48 +78,129 @@ exports.receiveRouteSheet = async (req, res) => {
         res.send('Error al marcar como recibida la hoja de ruta.');
     }
 };
+
 exports.editRouteSheet = async (req, res) => {
     const routeSheetId = req.params.id;
     try {
-        // Obtener la hoja de ruta
-        const routeSheetResult = await pool.query('SELECT * FROM route_sheets WHERE id = $1', [routeSheetId]);
-        const routeSheet = routeSheetResult.rows[0];
+        const repartidoresResult = await pool.query('SELECT * FROM repartidores');
+        const repartidores = repartidoresResult.rows;
 
-        // Obtener los detalles de la hoja de ruta
-        const detailsResult = await pool.query('SELECT * FROM route_sheet_details WHERE route_sheet_id = $1', [routeSheetId]);
+        const detailsResult = await pool.query(`
+            SELECT rsd.sucursal, rsd.cantidad_bultos, rsd.refrigerados, rsd.cantidad_refrigerados, rss.codigo
+            FROM route_sheet_details rsd
+            LEFT JOIN route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
+            WHERE rsd.route_sheet_id = $1
+        `, [routeSheetId]);
         const routeSheetDetails = detailsResult.rows;
 
-        res.render('edit-route', { routeSheetId, routeSheet, routeSheetDetails });
+        const selectedRepartidor = (routeSheetDetails.length > 0) ? routeSheetDetails[0].repartidor : null;
+
+        res.render('edit-route', {
+            routeSheetId,
+            routeSheetDetails,
+            repartidores,
+            sucursales: repartidores.map(rep => rep.recorrido).flat(),
+            selectedRepartidor
+        });
     } catch (err) {
         console.error(err);
-        res.send('Error al obtener los datos de la hoja de ruta.');
+        res.send('Error al editar la hoja de ruta.');
+    }
+};
+
+exports.editRouteSheetDetail = async (req, res) => {
+    const { id, sucursal } = req.params;
+
+    try {
+        const detailsResult = await pool.query('SELECT id, codigo FROM route_sheet_scans WHERE route_sheet_id = $1 AND sucursal = $2', [id, sucursal]);
+        const routeSheetDetails = detailsResult.rows;
+
+        res.render('edit-route-detail', { routeSheetId: id, sucursal, routeSheetDetails });
+    } catch (err) {
+        console.error(err);
+        res.send('Error al obtener los detalles de la sucursal.');
+    }
+};
+
+exports.updateRouteSheetDetail = async (req, res) => {
+    const { id, sucursal } = req.params;
+    const { new_codes, delete_codes } = req.body;
+
+    try {
+        // Eliminar los códigos seleccionados
+        if (delete_codes && delete_codes.length > 0) {
+            await pool.query('DELETE FROM route_sheet_scans WHERE id = ANY($1)', [delete_codes]);
+
+            // Actualizar la cantidad de bultos después de la eliminación
+            const bultosResult = await pool.query(
+                'SELECT COUNT(*) FROM route_sheet_scans WHERE route_sheet_id = $1 AND sucursal = $2',
+                [id, sucursal]
+            );
+            const cantidad_bultos = bultosResult.rows[0].count;
+
+            await pool.query(
+                'UPDATE route_sheet_details SET cantidad_bultos = $1 WHERE route_sheet_id = $2 AND sucursal = $3',
+                [cantidad_bultos, id, sucursal]
+            );
+        }
+
+        // Insertar nuevos códigos
+        if (new_codes && new_codes.length > 0) {
+            for (let codigo of new_codes) {
+                await pool.query('INSERT INTO route_sheet_scans (route_sheet_id, sucursal, codigo) VALUES ($1, $2, $3)', [
+                    id,
+                    sucursal,
+                    codigo
+                ]);
+            }
+
+            // Actualizar la cantidad de bultos después de agregar nuevos códigos
+            const bultosResult = await pool.query(
+                'SELECT COUNT(*) FROM route_sheet_scans WHERE route_sheet_id = $1 AND sucursal = $2',
+                [id, sucursal]
+            );
+            const cantidad_bultos = bultosResult.rows[0].count;
+
+            await pool.query(
+                'UPDATE route_sheet_details SET cantidad_bultos = $1 WHERE route_sheet_id = $2 AND sucursal = $3',
+                [cantidad_bultos, id, sucursal]
+            );
+        }
+
+        res.redirect(`/admin/edit-route/${id}`);
+    } catch (err) {
+        console.error(err);
+        res.send('Error al actualizar los detalles de la sucursal.');
     }
 };
 
 
-
-
 exports.updateRouteSheet = async (req, res) => {
     const routeSheetId = req.params.id;
-    const { nombreHojaRuta, sucursal, cantidad_bultos, refrigerados, cantidad_refrigerados, repartidor } = req.body;
+    const { repartidor, sucursal, cantidad_bultos, refrigerados, cantidad_refrigerados, delete_codes } = req.body;
 
     try {
-        await pool.query('UPDATE route_sheets SET nombreHojaRuta = $1, repartidor = $2 WHERE id = $3', [
-            nombreHojaRuta,
+        await pool.query('UPDATE route_sheets SET repartidor = $1 WHERE id = $2', [
             repartidor,
             routeSheetId
         ]);
 
         await pool.query('DELETE FROM route_sheet_details WHERE route_sheet_id = $1', [routeSheetId]);
 
-        for (let i = 0; i < sucursal.length; i++) {
-            await pool.query('INSERT INTO route_sheet_details (route_sheet_id, sucursal, cantidad_bultos, refrigerados, cantidad_refrigerados) VALUES ($1, $2, $3, $4, $5)', [
-                routeSheetId,
-                sucursal[i],
-                cantidad_bultos[i],
-                refrigerados[i] === 'true',
-                refrigerados[i] === 'true' ? cantidad_refrigerados[i] : null
-            ]);
+        if (sucursal && Array.isArray(sucursal)) {
+            for (let i = 0; i < sucursal.length; i++) {
+                await pool.query('INSERT INTO route_sheet_details (route_sheet_id, sucursal, cantidad_bultos, refrigerados, cantidad_refrigerados) VALUES ($1, $2, $3, $4, $5)', [
+                    routeSheetId,
+                    sucursal[i],
+                    cantidad_bultos[i],
+                    refrigerados[i] === 'true',
+                    refrigerados[i] === 'true' ? cantidad_refrigerados[i] : null
+                ]);
+            }
+        }
+
+        if (delete_codes && delete_codes.length > 0) {
+            await pool.query('DELETE FROM route_sheet_scans WHERE id = ANY($1)', [delete_codes]);
         }
 
         res.redirect('/admin');
@@ -166,12 +246,10 @@ exports.viewRouteSheetDetail = async (req, res) => {
     }
 };
 
-
 exports.viewRouteSheet = async (req, res) => {
     const routeSheetId = req.params.id;
 
     try {
-        // Consulta para obtener los detalles específicos de cada sucursal en la hoja de ruta
         const detailsResult = await pool.query(`
             SELECT sucursal, SUM(cantidad_bultos) as cantidad_bultos, 
                    refrigerados, SUM(cantidad_refrigerados) as cantidad_refrigerados
@@ -181,16 +259,12 @@ exports.viewRouteSheet = async (req, res) => {
 
         const routeSheetDetails = detailsResult.rows;
 
-        // Renderiza la vista con los detalles de la hoja de ruta
         res.render('view-route', { routeSheetId, routeSheetDetails });
     } catch (err) {
         console.error(err);
         res.send('Error al obtener los detalles de la hoja de ruta.');
     }
 };
-
-
-
 
 exports.viewRouteSheetGeneral = async (req, res) => {
     const routeSheetId = req.params.id;
@@ -211,5 +285,3 @@ exports.viewRouteSheetGeneral = async (req, res) => {
         res.send('Error al obtener los detalles de la hoja de ruta.');
     }
 };
-
-
