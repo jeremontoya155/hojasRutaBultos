@@ -4,12 +4,21 @@ body {
     background-color: #f4f4f4;
     color: #333;
     margin: 0;
-    padding: 20px;
 }
-
-h2 {
-    text-align: center;
-    color: #2c3e50;
+.contenedorBody{
+    margin: 1em;
+}
+.nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background-color: #34495e;
+    width:100%;
+    margin:0;
+}
+.nav h2{
+    color: #fff;
+    margin-left:50px;
 }
 
 /* Table styles */

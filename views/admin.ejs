@@ -4,47 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administración - Hojas de Ruta</title>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/admin.css"> <!-- Enlace al CSS -->
 </head>
 <body>
-    <h2>Administración de Hojas de Ruta</h2>
-
-    <div class="tab-buttons">
-        
-        <!-- Botón para cargar nueva hoja de ruta, redirigiendo a la página de carga -->
-        <button onclick="window.location.href='/admin/load-route'">Cargar Nueva Hoja de Ruta</button>
+    <div class="nav">
+        <h2>Administrador de Hojas de Ruta</h2>
+        <div class="tab-buttons">
+            <!-- Botón para cargar nueva hoja de ruta, redirigiendo a la página de carga -->
+            <button onclick="window.location.href='/admin/load-route'"><i class="fas fa-plus"></i> Hoja de ruta</button>
+        </div>
     </div>
 
     <!-- Tab de Historial -->
     <div id="historial" class="tab active">
-        <h3>Historial de Hojas de Ruta</h3>
-
+        <div class="tituloHistorial">
+            <h3>Historial</h3>
+            <button id="toggleButton" class="icon-button">
+                <i id="icon" class="fa-solid fa-arrow-down"></i>
+                <span id="buttonText">Mostrar Filtros</span>
+            </button>
+        </div>
         <!-- Filtros en la parte superior de la tabla -->
-        <div class="filter-row">
-            <input type="text" id="filterName" placeholder="Filtrar por Nombre" onkeyup="filterTable()">
-            <input type="text" id="filterCreationDate" placeholder="Filtrar por Fecha de Creación" onkeyup="filterTable()">
-            <input type="text" id="filterReceptionDate" placeholder="Filtrar por Fecha de Recepción" onkeyup="filterTable()">
-        
+        <div class="filter-row" id="filterRow">
+            <input type="text" id="filterName" placeholder="Nombre de Hoja de ruta" onkeyup="filterTable()">
+            <input type="text" id="filterCreationDate" placeholder="Fecha de Creación" onkeyup="filterTable()">
+            <input type="text" id="filterReceptionDate" placeholder="Fecha de Recepción" onkeyup="filterTable()">
+            
+            <input type="text" id="filterRepartidor" placeholder="Filtrar por Repartidor" onkeyup="filterTable()">
             <!-- Filtro de Estado con un select -->
             <select id="filterReceived" onchange="filterTable()">
-                <option value="">Filtrar por Estado</option>
+                <option value="">Estado</option>
                 <option value="recibido">Recibido</option>
                 <option value="en camino">En camino</option>
             </select>
         
-            <input type="text" id="filterRepartidor" placeholder="Filtrar por Repartidor" onkeyup="filterTable()">
         </div>
         
-        <table border="1" id="routeTable">
+        <table id="routeTable">
             <tr>
-                <th>ID</th>
+                <th id="id">ID</th>
                 <th>Nombre</th>
                 <th>Fecha de Creación</th>
                 <th>Fecha de Recepción</th>
                 <th>Estado</th>
                 <th>Repartidor</th>
-                <th>Acciones</th>
+                <th id="acciones">Acciones</th>
             </tr>
             <% routeSheets.forEach(sheet => { %>
             <tr>
@@ -96,6 +101,29 @@
         // Activa la primera pestaña por defecto
         document.addEventListener('DOMContentLoaded', () => {
             showTab('historial');
+        }); 
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const button = document.getElementById('toggleButton');
+            const filterRow = document.getElementById('filterRow');
+            const buttonText = document.getElementById('buttonText');
+            const icon = document.getElementById('icon');
+
+            button.addEventListener('click', function() {
+                // Alterna la clase 'expanded' en el div
+                filterRow.classList.toggle('expanded');
+                
+                // Cambia el texto y el icono del botón según el estado
+                if (filterRow.classList.contains('expanded')) {
+                    buttonText.textContent = 'Ocultar Filtros';
+                    icon.classList.remove('fa-arrow-down');
+                    icon.classList.add('fa-arrow-up');
+                } else {
+                    buttonText.textContent = 'Mostrar Filtros';
+                    icon.classList.remove('fa-arrow-up');
+                    icon.classList.add('fa-arrow-down');
+                }
+            });
         });
 
         // Función de filtro para la tabla

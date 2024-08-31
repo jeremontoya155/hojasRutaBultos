@@ -12,12 +12,7 @@ body {
     min-height: 100vh;
 }
 
-h2 {
-    font-size: 2rem;
-    color: #34495e;
-    margin-bottom: 20px;
-    text-align: center;
-}
+
 
 /* Estilos para las tablas */
 table {

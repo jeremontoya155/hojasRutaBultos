@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Hoja de rutas</title>
     <link rel="stylesheet" href="/css/login.css">  <!-- Asegúrate de que la ruta sea correcta -->
 
 </head>
 <body>
- 
     <form action="/login" method="POST">
-        <label for="username">Usuario:</label>
-        <input type="text" id="username" name="username" required>
-        <br>
-        <label for="password">Contraseña:</label>
-        <input type="password" id="password" name="password" required>
-        <br>
-        <button type="submit">Ingresar</button>
+        <div class="form">
+            <h1>Ingreso hoja de rutas</h1>
+            <input type="text" id="username" name="username" placeholder="Ingrese usuario" required>
+            <input type="password" id="password" name="password" placeholder="Ingrese su contraseña" required>
+            <button type="submit">Ingresar</button>
+        </div>
+        <div class="logoLogin">
+            <img src="/images/LogoBlanco.png" alt="FSA">
+        </div>
     </form>
 </body>
 </html>
