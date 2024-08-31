@@ -7,30 +7,35 @@
     <link rel="stylesheet" href="/css/detail-route.css"> 
 </head>
 <body>
-    <h2>Detalles de la Sucursal <%= sucursal %> en la Hoja de Ruta ID: <%= routeSheetId %></h2>
+    
+    <div class="nav">
+        <h2>Detalles de la Sucursal <%= sucursal %> en la Hoja de Ruta ID: <%= routeSheetId %></h2>
+    </div>
+    <div class="contenedorBody">
 
-    <input type="text" id="filterInput" placeholder="Filtrar por código de barra...">
-
-    <table border="1">
-        <thead>
-            <tr>
-                <th>ID del Código</th>
-                <th>Código</th>
-            </tr>
-        </thead>
-        <tbody id="codeTable">
-            <% routeSheetDetails.forEach(detail => { %>
-            <tr>
-                <td><%= detail.id %></td>
-                <td><%= detail.codigo %></td>
-            </tr>
-            <% }); %>
-        </tbody>
-    </table>
-
-    <p id="noResults">No se encontraron resultados.</p>
-
-    <a href="/admin/view-route-general/<%= routeSheetId %>">Volver al Resumen General</a>
+        <input type="text" id="filterInput" placeholder="Filtrar por código de barra...">
+    
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ID del Código</th>
+                    <th>Código</th>
+                </tr>
+            </thead>
+            <tbody id="codeTable">
+                <% routeSheetDetails.forEach(detail => { %>
+                <tr>
+                    <td><%= detail.id %></td>
+                    <td><%= detail.codigo %></td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    
+        <p id="noResults">No se encontraron resultados.</p>
+    
+        <a href="/admin/view-route-general/<%= routeSheetId %>">Volver al Resumen General</a>
+    </div>
 
     <script>
         // Filtro de tabla

@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resumen General de la Hoja de Ruta ID: <%= routeSheetId %></title>
-    <link rel="stylesheet" href="/css/admin.css"> <!-- Puedes ajustar el enlace al CSS -->
-</head>
-<body>
-    <h2>Resumen General de la Hoja de Ruta ID: <%= routeSheetId %></h2>
+    <title>Hoja de Ruta ID: <%= routeSheetId %></title>
+    <link rel="stylesheet" href="/css/admin.css">
 
-    <table border="1">
+<body>
+
+    <div class="nav">
+        <h2>Resumen General de la Hoja de Ruta ID: <%= routeSheetId %></h2>
+    </div>
+
+    <table id="DetalleHojaRuta">
         <thead>
             <tr>
                 <th>Sucursal</th>

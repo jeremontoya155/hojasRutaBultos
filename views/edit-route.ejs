@@ -7,92 +7,97 @@
     <link rel="stylesheet" href="/css/edit-route.css">
 </head>
 <body>
-    <h2>Editar Hoja de Ruta ID: <%= routeSheetId %></h2>
 
-    <form action="/admin/update-route/<%= routeSheetId %>" method="POST" id="routeForm">
-        <!-- Repartidor -->
-        <div class="route-line">
-            <label for="repartidor">Repartidor:</label>
-            <input type="text" id="repartidor" name="repartidor" value="<%= selectedRepartidor %>" readonly>
-        </div>
+    <div class="nav">
+        <h2>Editar Hoja de Ruta ID: <%= routeSheetId %></h2>
+    </div>
+    <div class="containerBody">
 
-        <!-- Tabla de Sucursales y Detalles -->
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>Sucursal</th>
-                    <th>Cantidad de Bultos</th>
-                    <th>Refrigerados</th>
-                    <th>Cantidad de Refrigerados</th>
-                    <th>Códigos</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% 
-                let sucursalMap = new Map();
-                routeSheetDetails.forEach(detail => {
-                    if (!sucursalMap.has(detail.sucursal)) {
-                        sucursalMap.set(detail.sucursal, {
-                            cantidad_bultos: 0,
-                            refrigerados: detail.refrigerados,
-                            cantidad_refrigerados: detail.cantidad_refrigerados,
-                            codigos: []
-                        });
-                    }
-                    const sucursalDetail = sucursalMap.get(detail.sucursal);
-                    sucursalDetail.cantidad_bultos += parseInt(detail.cantidad_bultos);
-                    sucursalDetail.codigos.push(detail.codigo);
-                });
-
-                for (let [sucursal, detail] of sucursalMap.entries()) { 
-                %>
-                <tr>
-                    <td>
-                        <select name="sucursal[]" required>
-                            <option value="" disabled>Selecciona una sucursal</option>
-                            <% sucursales.forEach(suc => { %>
-                            <option value="<%= suc %>" <%= suc === sucursal ? 'selected' : '' %>><%= suc %></option>
-                            <% }); %>
-                        </select>
-                    </td>
-                    <td>
-                        <input type="number" name="cantidad_bultos[]" value="<%= detail.cantidad_bultos %>" readonly>
-                    </td>
-                    <td>
-                        <input type="checkbox" name="refrigerados[]" value="true" <%= detail.refrigerados ? 'checked' : '' %>>
-                    </td>
-                    <td>
-                        <input type="number" name="cantidad_refrigerados[]" value="<%= detail.refrigerados ? detail.cantidad_refrigerados : '' %>">
-                    </td>
-                    <td>
-                        <ul>
-                            <% if (detail.codigos && detail.codigos.length > 0) { %>
-                                <% detail.codigos.forEach(codigo => { %>
-                                    <li><%= codigo %></li>
+        <form action="/admin/update-route/<%= routeSheetId %>" method="POST" id="routeForm">
+            <!-- Repartidor -->
+            <div class="route-line">
+                <label for="repartidor">Repartidor:</label>
+                <input type="text" id="repartidor" name="repartidor" value="<%= selectedRepartidor %>" readonly>
+            </div>
+    
+            <!-- Tabla de Sucursales y Detalles -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sucursal</th>
+                        <th>Cantidad de Bultos</th>
+                        <th>Refrigerados</th>
+                        <th>Cantidad de Refrigerados</th>
+                        <th>Códigos</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% 
+                    let sucursalMap = new Map();
+                    routeSheetDetails.forEach(detail => {
+                        if (!sucursalMap.has(detail.sucursal)) {
+                            sucursalMap.set(detail.sucursal, {
+                                cantidad_bultos: 0,
+                                refrigerados: detail.refrigerados,
+                                cantidad_refrigerados: detail.cantidad_refrigerados,
+                                codigos: []
+                            });
+                        }
+                        const sucursalDetail = sucursalMap.get(detail.sucursal);
+                        sucursalDetail.cantidad_bultos += parseInt(detail.cantidad_bultos);
+                        sucursalDetail.codigos.push(detail.codigo);
+                    });
+    
+                    for (let [sucursal, detail] of sucursalMap.entries()) { 
+                    %>
+                    <tr>
+                        <td>
+                            <select name="sucursal[]" required>
+                                <option value="" disabled>Selecciona una sucursal</option>
+                                <% sucursales.forEach(suc => { %>
+                                <option value="<%= suc %>" <%= suc === sucursal ? 'selected' : '' %>><%= suc %></option>
                                 <% }); %>
-                            <% } else { %>
-                                <li>No hay códigos disponibles para esta sucursal</li>
-                            <% } %>
-                        </ul>
-                    </td>
-                    <td>
-                        <a href="/admin/edit-route-detail/<%= routeSheetId %>/<%= sucursal %>">Editar Detalles</a>
-                    </td>
-                </tr>
-                <% } %>
-            </tbody>
-        </table>
-
-        <!-- Botón para agregar nuevas sucursales -->
-        <button type="button" id="add-line">Agregar Sucursal</button>
-
-        <!-- Botón para guardar cambios -->
-        <button type="submit">Guardar Cambios</button>
-    </form>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" name="cantidad_bultos[]" value="<%= detail.cantidad_bultos %>" readonly>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="refrigerados[]" value="true" <%= detail.refrigerados ? 'checked' : '' %>>
+                        </td>
+                        <td>
+                            <input type="number" name="cantidad_refrigerados[]" value="<%= detail.refrigerados ? detail.cantidad_refrigerados : '' %>">
+                        </td>
+                        <td>
+                            <ul>
+                                <% if (detail.codigos && detail.codigos.length > 0) { %>
+                                    <% detail.codigos.forEach(codigo => { %>
+                                        <li><%= codigo %></li>
+                                    <% }); %>
+                                <% } else { %>
+                                    <li>No hay códigos disponibles para esta sucursal</li>
+                                <% } %>
+                            </ul>
+                        </td>
+                        <td>
+                            <a href="/admin/edit-route-detail/<%= routeSheetId %>/<%= sucursal %>">Editar Detalles</a>
+                        </td>
+                    </tr>
+                    <% } %>
+                </tbody>
+            </table>
+    
+            <!-- Botón para agregar nuevas sucursales -->
+            <button type="button" id="add-line">Agregar Sucursal</button>
+    
+            <!-- Botón para guardar cambios -->
+            <button type="submit">Guardar Cambios</button>
+        </form>
+    </div>
 
     <script>
-        const sucursalesData = <%- JSON.stringify(sucursales) %>;
+        const sucursalesData = <%- JSON.stringify(sucursales) %> ;
 
         // Función para agregar una nueva línea de sucursal
         document.getElementById('add-line').addEventListener('click', () => {
