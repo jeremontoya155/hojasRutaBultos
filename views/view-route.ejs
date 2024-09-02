@@ -20,25 +20,24 @@
         <% } %>
     </ul>
 
-    <h3>Detalles de los Códigos Escaneados</h3>
-    <table border="1">
-        <tr>
-            <th>Sucursal</th>
-            <th>Cantidad de Bultos</th>
-            <th>Refrigerados</th> <!-- Nueva columna -->
-            <th>Cantidad de Refrigerados</th> <!-- Nueva columna -->
-            <th>Código</th>
-        </tr>
-        <% routeSheetDetails.forEach(detail => { %>
-        <tr>
-            <td><%= detail.sucursal %></td>
-            <td><%= detail.cantidad_bultos %></td>
-            <td><%= tieneRefrigerados ? 'Sí' : 'No' %></td> <!-- Mostrar si hay refrigerados -->
-            <td><%= refrigeradosCount %></td> <!-- Mostrar la cantidad de refrigerados -->
-            <td><%= detail.codigo %></td>
-        </tr>
-        <% }); %>
-    </table>
+    <h3>Desglose Detallado</h3>
+    <% if (Object.keys(detailedBreakdown).length > 0) { %>
+        <% for (let [tipo, codigos] of Object.entries(detailedBreakdown)) { %>
+            <h4><%= tipo %></h4>
+            <table border="1">
+                <tr>
+                    <th>Código</th>
+                </tr>
+                <% codigos.forEach(codigo => { %>
+                <tr>
+                    <td><%= codigo %></td>
+                </tr>
+                <% }); %>
+            </table>
+        <% } %>
+    <% } else { %>
+        <p>No hay detalles disponibles.</p>
+    <% } %>
 
     <a href="/my-routes">Volver a mis hojas de ruta</a>
 </body>

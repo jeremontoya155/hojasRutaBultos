@@ -47,7 +47,6 @@ exports.getUserRouteSheets = async (req, res) => {
 };
 
 
-// Ver los detalles de una hoja de ruta
 exports.viewRouteSheet = async (req, res) => {
     const routeSheetId = req.params.id;
     const user = req.session.user;
@@ -86,7 +85,7 @@ exports.viewRouteSheet = async (req, res) => {
 
         // Resumir los tipos de códigos y contar refrigerados
         let summaryByType = {};
-        let refrigeradosCount = 0;
+        let detailedBreakdown = {};
 
         routeSheetDetails.forEach(detail => {
             const codigo = detail.codigo;
@@ -94,20 +93,21 @@ exports.viewRouteSheet = async (req, res) => {
                 const tipo = classificationCriteria[codigo.charAt(0)] || "Desconocido";
                 summaryByType[tipo] = (summaryByType[tipo] || 0) + 1;
 
-                if (codigo.charAt(0) === '3') {
-                    refrigeradosCount++;
+                // Crear un desglose detallado por tipo
+                if (!detailedBreakdown[tipo]) {
+                    detailedBreakdown[tipo] = [];
                 }
+                detailedBreakdown[tipo].push(codigo);
             }
         });
 
-        const tieneRefrigerados = refrigeradosCount > 0;
-
-        res.render('view-route', { routeSheetId, routeSheetDetails, summaryByType, refrigeradosCount, tieneRefrigerados });
+        res.render('view-route', { routeSheetId, summaryByType, detailedBreakdown });
     } catch (err) {
         console.error(err);
         res.status(500).send('Error al obtener los detalles de la hoja de ruta.');
     }
 };
+
 
 // Marcar como recibido
 // Marcar como recibido
