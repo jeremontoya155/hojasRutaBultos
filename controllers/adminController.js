@@ -4,6 +4,18 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
+
+// Definición de classificationCriteria
+const classificationCriteria = {
+    "1": "Cajas",
+    "2": "Cubetas",
+    "3": "Refrigerado",
+    "4": "Bolsas",
+    "5": "Encargado",
+    "6": "Varios"
+};
+
+
 exports.getRouteSheets = async (req, res) => {
     try {
         const result = await pool.query('SELECT id, nombreHojaRuta, status, created_at, fecha_recepcion, received, repartidor FROM route_sheets ORDER BY created_at DESC');
@@ -290,6 +302,15 @@ exports.viewRouteSheetGeneral = async (req, res) => {
 exports.editRouteSheetAdvanced = async (req, res) => {
     const routeSheetId = req.params.id;
 
+    const classificationCriteria = {
+        "1": "Cajas",
+        "2": "Cubetas",
+        "3": "Refrigerado",
+        "4": "Bolsas",
+        "5": "Encargado",
+        "6": "Varios"
+    };
+
     try {
         const repartidoresResult = await pool.query('SELECT * FROM repartidores');
         const repartidores = repartidoresResult.rows;
@@ -304,42 +325,51 @@ exports.editRouteSheetAdvanced = async (req, res) => {
             WHERE rsd.route_sheet_id = $1
             GROUP BY rsd.sucursal, rsd.cantidad_bultos, rsd.refrigerados, rsd.cantidad_refrigerados
         `, [routeSheetId]);
-        const routeSheetDetails = detailsResult.rows;
+        const routeSheetDetails = detailsResult.rows.map(detail => {
+            return {
+                ...detail,
+                codigos: detail.codigos.map(codigo => ({
+                    codigo,
+                    categoria: classificationCriteria[codigo.charAt(0)] || "Desconocido"
+                }))
+            };
+        });
 
         res.render('edit-route-advanced', {
             routeSheetId,
             routeSheet,
             routeSheetDetails,
-            repartidores
+            repartidores,
+            sucursales: repartidores.map(rep => rep.recorrido).flat(),
+            assignedRepartidor: repartidores.find(rep => rep.nombre === routeSheet.repartidor)
         });
     } catch (err) {
         console.error(err);
         res.send('Error al cargar la vista de edición avanzada.');
     }
 };
-
-
 exports.updateRouteSheetAdvanced = async (req, res) => {
     const routeSheetId = req.params.id;
-    const { repartidor } = req.body;
 
     try {
-        await pool.query('UPDATE route_sheets SET repartidor = $1 WHERE id = $2', [
-            repartidor,
-            routeSheetId
-        ]);
+        // No actualizamos el repartidor en la hoja de ruta, se mantiene el asignado inicialmente
 
-        // Eliminar detalles existentes
+        // Eliminamos los detalles existentes de la hoja de ruta
         await pool.query('DELETE FROM route_sheet_details WHERE route_sheet_id = $1', [routeSheetId]);
 
-        const keys = Object.keys(req.body);
-        const sucursales = keys.filter(key => key.startsWith('sucursal_')).map(key => req.body[key]);
-        const codigos = keys.filter(key => key.startsWith('codigos_')).map(key => req.body[key].split(',').map(c => c.trim()));
+        // Obtenemos las claves de sucursales y códigos desde el formulario
+        const sucursales = Object.keys(req.body)
+            .filter(key => key.startsWith('sucursal_'))
+            .map(key => req.body[key]);
 
+        const codigosKeys = Object.keys(req.body).filter(key => key.startsWith('codigos_'));
+
+        // Reinsertamos los detalles de las sucursales y los códigos asociados
         for (let i = 0; i < sucursales.length; i++) {
             const sucursal = sucursales[i];
-            const codigosArray = codigos[i];
+            const codigosArray = req.body[codigosKeys[i]].split(',').map(codigo => codigo.trim());
 
+            // Insertamos los detalles de la sucursal
             await pool.query('INSERT INTO route_sheet_details (route_sheet_id, sucursal, cantidad_bultos, refrigerados, cantidad_refrigerados) VALUES ($1, $2, $3, $4, $5)', [
                 routeSheetId,
                 sucursal,
@@ -348,12 +378,15 @@ exports.updateRouteSheetAdvanced = async (req, res) => {
                 0
             ]);
 
+            // Insertamos los códigos escaneados asociados a la sucursal
             for (let codigo of codigosArray) {
+                const categoria = classificationCriteria[codigo.charAt(0)] || "Desconocido";
                 try {
-                    await pool.query('INSERT INTO route_sheet_scans (route_sheet_id, sucursal, codigo) VALUES ($1, $2, $3)', [
+                    await pool.query('INSERT INTO route_sheet_scans (route_sheet_id, sucursal, codigo, categoria) VALUES ($1, $2, $3, $4)', [
                         routeSheetId,
                         sucursal,
-                        codigo
+                        codigo,
+                        categoria
                     ]);
                 } catch (err) {
                     if (err.code !== '23505') { // Ignorar errores de duplicados
@@ -363,6 +396,7 @@ exports.updateRouteSheetAdvanced = async (req, res) => {
             }
         }
 
+        // Redirigimos al administrador después de guardar los cambios
         res.redirect('/admin');
     } catch (err) {
         console.error(err);

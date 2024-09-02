@@ -75,3 +75,103 @@ a:hover {
     color: #e74c3c;
     display: none;
 }
+
+
+
+/* Estilos específicos para la página de edición */
+.codigos-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.codigos-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.codigos-list li span {
+    flex-grow: 1;
+}
+
+.codigos-list li button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 5px 10px;
+    margin-left: 10px;
+}
+
+.codigos-list li button:hover {
+    background-color: #c0392b;
+}
+
+.codigos-list li i {
+    margin-right: 10px;
+    color: #3498db;
+}
+
+.nav h2 {
+    color: #fff;
+    margin-left: 50px;
+}
+
+form {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+h3 {
+    color: #007c98;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 1rem;
+}
+
+button[type="submit"], button[type="button"] {
+    background-color: #40b8d0;
+    color: #fff;
+    border: none;
+    border-radius: .6em;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: block;
+    margin: 0 auto;
+}
+
+button[type="submit"]:hover, button[type="button"]:hover {
+    background-color: #007c98;
+    transform: translateY(-2px);
+}
+
+.sucursal-detail {
+    margin-bottom: 20px;
+}

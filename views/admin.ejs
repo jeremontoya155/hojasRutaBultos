@@ -9,7 +9,7 @@
 </head>
 <body>
     <div class="nav">
-        <h2>Administrador de Hojas de Ruta</h2>
+        <h2>EXPEDICION</h2>
         <div class="tab-buttons">
             <!-- Botón para cargar nueva hoja de ruta, redirigiendo a la página de carga -->
             <button onclick="window.location.href='/admin/load-route'"><i class="fas fa-plus"></i> Hoja de ruta</button>
@@ -43,18 +43,18 @@
         
         <table id="routeTable">
             <tr>
-                <th id="id">ID</th>
+                <th>ID</th>
                 <th>Nombre</th>
                 <th>Fecha de Creación</th>
                 <th>Fecha de Recepción</th>
                 <th>Estado</th>
                 <th>Repartidor</th>
-                <th id="acciones">Acciones</th>
+                <th>Acciones</th>
             </tr>
             <% routeSheets.forEach(sheet => { %>
             <tr>
                 <td><%= sheet.id %></td>
-                <td><%= sheet.nombrehojaruta %></td> <!-- Mostrar el nombre de la hoja de ruta -->
+                <td><%= sheet.nombrehojaruta %></td>
                 <td><%= new Date(sheet.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %></td>
                 <td>
                     <% if (sheet.fecha_recepcion) { %>
@@ -77,13 +77,13 @@
                         <a href="/admin/send-route/<%= sheet.id %>">Enviar</a>
                     <% } else if (sheet.status === 'sent') { %>
                         <span>Enviado</span> | 
-                        <a href="/admin/view-route-general/<%= sheet.id %>">Ver</a> <!-- Enlace modificado -->
+                        <a href="/admin/view-route-general/<%= sheet.id %>">Ver</a>
                     <% } %>
                 </td>
-                
             </tr>
             <% }); %>
         </table>
+        
     </div>
 
     <!-- Tab para Cargar Nueva Hoja de Ruta -->
