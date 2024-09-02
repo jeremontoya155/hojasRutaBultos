@@ -17,8 +17,10 @@ exports.loginUser = async (req, res) => {
                 res.redirect('/admin');  // Admin redirigido a la vista de administración
             } else if (user.role === 'reparto') {
                 res.redirect('/view-all-routes');  // Reparto redirigido a la vista de todas las rutas
+            } else if (user.role === 'user') {
+                res.redirect('/my-routes');  // Usuarios con rol 'user' redirigidos a la vista de sus rutas
             } else {
-                res.redirect('/my-routes');  // Usuarios de sucursales redirigidos a la vista de sus rutas
+                res.send('Rol de usuario no reconocido.');
             }
         } else {
             res.send('Usuario o contraseña incorrectos.');
@@ -28,4 +30,3 @@ exports.loginUser = async (req, res) => {
         res.send('Error al conectar a la base de datos.');
     }
 };
-

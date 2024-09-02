@@ -9,19 +9,33 @@
 <body>
     <h2>Detalles de la Hoja de Ruta ID: <%= routeSheetId %></h2>
 
+    <h3>Resumen de Tipos de Códigos</h3>
+    <ul>
+        <% if (Object.keys(summaryByType).length > 0) { %>
+            <% for (let [tipo, cantidad] of Object.entries(summaryByType)) { %>
+                <li><%= tipo %>: <%= cantidad %></li>
+            <% } %>
+        <% } else { %>
+            <li>No hay datos de tipos de códigos disponibles.</li>
+        <% } %>
+    </ul>
+
+    <h3>Detalles de los Códigos Escaneados</h3>
     <table border="1">
         <tr>
             <th>Sucursal</th>
             <th>Cantidad de Bultos</th>
-            <th>Refrigerados</th>
-            <th>Cantidad de Refrigerados</th>
+            <th>Refrigerados</th> <!-- Nueva columna -->
+            <th>Cantidad de Refrigerados</th> <!-- Nueva columna -->
+            <th>Código</th>
         </tr>
         <% routeSheetDetails.forEach(detail => { %>
         <tr>
             <td><%= detail.sucursal %></td>
             <td><%= detail.cantidad_bultos %></td>
-            <td><%= detail.refrigerados ? 'Sí' : 'No' %></td>
-            <td><%= detail.refrigerados ? detail.cantidad_refrigerados : '-' %></td>
+            <td><%= tieneRefrigerados ? 'Sí' : 'No' %></td> <!-- Mostrar si hay refrigerados -->
+            <td><%= refrigeradosCount %></td> <!-- Mostrar la cantidad de refrigerados -->
+            <td><%= detail.codigo %></td>
         </tr>
         <% }); %>
     </table>

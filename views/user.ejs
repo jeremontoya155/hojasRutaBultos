@@ -4,10 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Hojas de Ruta</title>
-    <link rel="stylesheet" href="/css/user.css">  <!-- Asegúrate de que la ruta sea correcta -->
+    <link rel="stylesheet" href="/css/user.css">
 </head>
 <body>
     <h2>Hojas de Ruta Asignadas a Sucursal <%= userSucursal %></h2>
+
+    <h3>Resumen de Tipos de Códigos</h3>
+    <ul>
+        <% if (Object.keys(summaryByType).length > 0) { %>
+            <% for (let [tipo, cantidad] of Object.entries(summaryByType)) { %>
+                <li><%= tipo %>: <%= cantidad %></li>
+            <% } %>
+        <% } else { %>
+            <li>No hay datos de tipos de códigos disponibles.</li>
+        <% } %>
+    </ul>
 
     <table border="1">
         <tr>
@@ -32,9 +43,11 @@
             </td>
             <td><%= sheet.sucursal %></td>
             <td>
-                <a href="/view-route/<%= sheet.id %>">Ver Detalles</a>
+                <a href="/my-routes/view-route/<%= sheet.id %>">Ver Detalles</a> <!-- Aquí se cambió la ruta -->
                 <% if (sheet.status === 'sent' && !sheet.received) { %>
-                    | <a href="/mark-received/<%= sheet.id %>">Marcar como Recibido</a>
+                    | <form action="/my-routes/mark-received/<%= sheet.id %>" method="POST" style="display:inline;"> <!-- Aquí también -->
+                        <button type="submit">Marcar como Recibido</button>
+                      </form>
                 <% } else if (sheet.received) { %>
                     | <span>Recibido</span>
                 <% } %>
