@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hoja de Ruta ID: <%= routeSheetId %></title>
     <link rel="stylesheet" href="/css/admin.css">
-
+</head>
 <body>
 
     <div class="nav">
@@ -29,7 +29,7 @@
                     <td><%= detail.sucursal %></td>
                     <td><%= detail.cantidad_bultos %></td>
                     <td><%= detail.refrigerados ? 'Sí' : 'No' %></td>
-                    <td><%= detail.refrigerados ? detail.cantidad_refrigerados : '-' %></td>
+                    <td><%= detail.cantidad_refrigerados %></td>
                     <td>
                         <a href="/admin/route-detail/<%= routeSheetId %>/<%= detail.sucursal %>">Ver Detalles</a>
                     </td>
@@ -43,9 +43,30 @@
         </tbody>
     </table>
     
+    <h3>Resumen por Tipo de Código de Barra</h3>
+    <table id="ResumenTipos">
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (Object.keys(summaryByType).length > 0) { %>
+                <% for (let tipo in summaryByType) { %>
+                <tr>
+                    <td><%= tipo %></td>
+                    <td><%= summaryByType[tipo] %></td>
+                </tr>
+                <% } %>
+            <% } else { %>
+                <tr>
+                    <td colspan="2">No hay códigos de barra categorizados.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
 
     <a href="/admin">Volver a mis hojas de ruta</a>
 </body>
 </html>
-
-

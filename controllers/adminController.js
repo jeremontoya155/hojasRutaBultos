@@ -281,17 +281,63 @@ exports.viewRouteSheet = async (req, res) => {
 exports.viewRouteSheetGeneral = async (req, res) => {
     const routeSheetId = req.params.id;
 
+    const classificationCriteria = {
+        "1": "Cajas",
+        "2": "Cubetas",
+        "3": "Refrigerado",
+        "4": "Bolsas",
+        "5": "Encargado",
+        "6": "Varios"
+    };
+
     try {
         const detailsResult = await pool.query(`
-            SELECT sucursal, SUM(cantidad_bultos) as cantidad_bultos, 
-                   refrigerados, SUM(cantidad_refrigerados) as cantidad_refrigerados
-            FROM route_sheet_details 
-            WHERE route_sheet_id = $1 
-            GROUP BY sucursal, refrigerados`, [routeSheetId]);
+            SELECT rsd.sucursal, array_agg(rss.codigo) as codigos
+            FROM route_sheet_details rsd
+            LEFT JOIN route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
+            WHERE rsd.route_sheet_id = $1
+            GROUP BY rsd.sucursal
+        `, [routeSheetId]);
 
-        const routeSheetDetails = detailsResult.rows;
+        let routeSheetDetails = [];
+        let summaryByType = {};
 
-        res.render('view-route-general', { routeSheetId, routeSheetDetails });
+        detailsResult.rows.forEach(detail => {
+            const codigos = detail.codigos || [];
+            let cantidadRefrigerados = 0;
+            let refrigerados = false;
+
+            // Resumen por tipo
+            let sucursalSummary = {};
+
+            codigos.forEach(codigo => {
+                const tipo = classificationCriteria[codigo.charAt(0)] || "Desconocido";
+                sucursalSummary[tipo] = (sucursalSummary[tipo] || 0) + 1;
+
+                if (tipo === "Refrigerado") {
+                    refrigerados = true;
+                    cantidadRefrigerados++;
+                }
+            });
+
+            // Acumular resumen por tipo
+            for (let tipo in sucursalSummary) {
+                summaryByType[tipo] = (summaryByType[tipo] || 0) + sucursalSummary[tipo];
+            }
+
+            routeSheetDetails.push({
+                sucursal: detail.sucursal,
+                cantidad_bultos: codigos.length,
+                refrigerados,
+                cantidad_refrigerados: cantidadRefrigerados
+            });
+        });
+
+        res.render('view-route-general', {
+            routeSheetId,
+            routeSheetDetails,
+            summaryByType
+        });
     } catch (err) {
         console.error(err);
         res.send('Error al obtener los detalles de la hoja de ruta.');
@@ -350,9 +396,16 @@ exports.editRouteSheetAdvanced = async (req, res) => {
 };
 exports.updateRouteSheetAdvanced = async (req, res) => {
     const routeSheetId = req.params.id;
+    const { delete_codes } = req.body;
 
     try {
-        // No actualizamos el repartidor en la hoja de ruta, se mantiene el asignado inicialmente
+        // Eliminar los códigos marcados para eliminación
+        if (delete_codes) {
+            const codesToDelete = delete_codes.split(',').map(code => code.trim());
+            if (codesToDelete.length > 0) {
+                await pool.query('DELETE FROM route_sheet_scans WHERE route_sheet_id = $1 AND codigo = ANY($2::text[])', [routeSheetId, codesToDelete]);
+            }
+        }
 
         // Eliminamos los detalles existentes de la hoja de ruta
         await pool.query('DELETE FROM route_sheet_details WHERE route_sheet_id = $1', [routeSheetId]);

@@ -9,24 +9,25 @@ body {
     align-items: center;
     flex-direction: column;
 }
-.nav{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     background-color: #34495e;
-    width:100%;
-    margin:0;
+    width: 100%;
+    margin: 0;
 }
-.nav h2{
+.nav h2 {
     color: #fff;
-    margin-left:50px;
+    margin-left: 50px;
 }
+
 /* Estilos de las pestañas */
 .tab-buttons {
     display: flex;
     justify-content: center;
-    align-items:center;
-    margin-right:50px;
+    align-items: center;
+    margin-right: 50px;
 }
 
 .tab-buttons button {
@@ -51,20 +52,20 @@ body {
     background-color: #007c98;
 }
 
-#historial h3{
-    color:#007c98;
-    font-size:1.7em;
-    margin:0;
+#historial h3 {
+    color: #007c98;
+    font-size: 1.7em;
+    margin: 0;
 }
 #historial button {
-    padding:1em;
+    padding: 1em;
     border-radius: 1em;
     transition: all 0.7s ease;
 }
-#historial button:hover{
+#historial button:hover {
     background-color: #555555;
-    color:#fff;
-    transform: translateY(-2px)
+    color: #fff;
+    transform: translateY(-2px);
 }
 #historial .filter-row {
     max-height: 0;
@@ -73,17 +74,16 @@ body {
 }
 
 #historial .filter-row.expanded {
-    max-height: 250px; 
+    max-height: 250px;
 }
 #historial .filter-row select,
-#historial .filter-row input{
+#historial .filter-row input {
     border-radius: 1em;
 }
 
-
-.tituloHistorial{
-    display:flex;
-    align-items:center;
+.tituloHistorial {
+    display: flex;
+    align-items: center;
     justify-content: space-between;
     height: fit-content;
     margin: 2em 10px;
@@ -91,12 +91,15 @@ body {
 
 /* Estilos para las tablas */
 table {
-    width: 100%;
+    width: 90%;  /* Asegura que ambas tablas tengan el mismo ancho */
+    max-width: 1200px;
     border-collapse: collapse;
     margin-bottom: 20px;
     background-color: #fff;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    height: auto; /* Ajusta la altura para permitir el contenido dinámico */
+    height: auto;
+    margin-left: auto;  /* Centra horizontalmente */
+    margin-right: auto;
 }
 
 /* Estilos para las celdas de la tabla */
@@ -104,7 +107,7 @@ th, td {
     padding: 15px;
     text-align: left;
     border-bottom: 1px solid #ddd;
-    word-wrap: break-word; /* Permite que el texto largo se ajuste dentro de la celda */
+    word-wrap: break-word;
 }
 
 th {
@@ -135,15 +138,16 @@ a:hover {
 /* Estilos para la fila de filtros */
 .filter-row {
     display: flex;
-    flex-flow:row nowrap; /* Permite que los filtros se envuelvan en pantallas pequeñas */
+    flex-flow: row nowrap;
     justify-content: space-between;
     margin-bottom: 10px;
-    width:100%;
+    width: 100%;
 }
+
 .filter-row select,
 .filter-row input {
     padding: 10px;
-    width: calc(100% / 5 - 10px); /* Ajusta el ancho de los filtros para que se ajusten en pantallas más pequeñas */
+    width: calc(100% / 5 - 10px);
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 1rem;
@@ -155,43 +159,50 @@ a:hover {
 
 /* Estilos para la tabla en dispositivos móviles */
 @media (max-width: 768px) {
-    #historial{
-        width:100%;
-        overflow-x:auto;
+    #historial {
+        width: 100%;
+        overflow-x: auto;
     }
-    .nav{
+    .nav {
         flex-flow: column wrap;
-        text-align:center;
+        text-align: center;
     }
-    .nav h2{
-        margin:0;
-        margin-top:1em;
-        margin-bottom:1em;
+    .nav h2 {
+        margin: 0;
+        margin-top: 1em;
+        margin-bottom: 1em;
     }
-    .nav button{
-        border-radius:.5em;
-        margin:0;
-        margin-bottom:1em;
+    .nav button {
+        border-radius: .5em;
+        margin: 0;
+        margin-bottom: 1em;
     }
-    .tab-buttons{
-        margin:0;
+    .tab-buttons {
+        margin: 0;
     }
-    .filter-row{
+    .filter-row {
         flex-flow: column nowrap;
         justify-content: center;
-        align-items:center;
-        margin-top:.5em;
+        align-items: center;
+        margin-top: .5em;
     }
     .filter-row input,
-    .filter-row select{
-        width:90%;
+    .filter-row select {
+        width: 90%;
         margin-bottom: 0.5em;
-        
     }
 }
 
 /* Estilos para el contenedor de detalles */
-#DetalleHojaRuta {
+#DetalleHojaRuta, #ResumenTipos {
     margin-top: 2em;
     max-width: 95%;
+    width: 90%;  /* Asegura que ambas tablas tengan el mismo ancho */
+    margin-left: auto;  /* Centra horizontalmente */
+    margin-right: auto;
+}
+
+h3 {
+    text-align: center;
+    margin-bottom: 10px;
 }

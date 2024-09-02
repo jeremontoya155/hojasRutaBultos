@@ -34,7 +34,7 @@
                         </thead>
                         <tbody>
                             <% detail.codigos.forEach(codigoObj => { %>
-                                <tr>
+                                <tr id="row_<%= index %>_<%= codigoObj.codigo %>">
                                     <td><%= codigoObj.codigo %></td>
                                     <td><%= codigoObj.categoria %></td>
                                     <td><button type="button" onclick="removeCode(<%= index %>, '<%= codigoObj.codigo %>')">X</button></td>
@@ -47,6 +47,8 @@
                 </div>
             <% }); %>
         </div>
+
+        <input type="hidden" name="delete_codes" id="delete_codes"> <!-- Campo oculto para códigos eliminados -->
 
         <button type="button" onclick="addNewSucursal()">Agregar Nueva Sucursal</button>
 
@@ -67,6 +69,8 @@
             "6": "Varios"
         };
 
+        let deletedCodes = [];
+
         function classifyBarcode(barcode) {
             const firstChar = barcode.charAt(0);
             return classificationCriteria[firstChar] || "Desconocido";
@@ -85,6 +89,7 @@
                     const classification = classifyBarcode(barcode);
 
                     const row = document.createElement('tr');
+                    row.id = `row_${index}_${barcode}`;
                     row.innerHTML = `
                         <td>${barcode}</td>
                         <td>${classification}</td>
@@ -108,13 +113,13 @@
         }
 
         function removeCode(index, code) {
-            const tableBody = document.querySelector(`#codigosTable_${index} tbody`);
-            Array.from(tableBody.querySelectorAll('tr')).forEach(row => {
-                if (row.cells[0].textContent === code) {
-                    tableBody.removeChild(row);
-                }
-            });
+            const row = document.getElementById(`row_${index}_${code}`);
+            row.remove();
             updateHiddenInput(index);
+
+            // Añadir el código eliminado a la lista
+            deletedCodes.push(code);
+            document.getElementById('delete_codes').value = deletedCodes.join(', ');
         }
 
         function addNewSucursal() {
