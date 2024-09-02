@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Hojas de Ruta</title>
     <link rel="stylesheet" href="/css/user.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
     <h2>Hojas de Ruta Asignadas a Sucursal <%= userSucursal %></h2>
@@ -20,40 +21,82 @@
         <% } %>
     </ul>
 
-    <table border="1">
-        <tr>
-            <th>ID</th>
-            <th>Fecha de Creación</th>
-            <th>Estado</th>
-            <th>Fecha de Recepción</th>
-            <th>Sucursal</th>
-            <th>Acciones</th>
-        </tr>
-        <% routeSheets.forEach(sheet => { %>
-        <tr>
-            <td><%= sheet.id %></td>
-            <td><%= new Date(sheet.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %></td>
-            <td><%= sheet.status %></td>
-            <td>
-                <% if (sheet.received) { %>
-                    <%= new Date(sheet.fecha_recepcion).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %>
-                <% } else { %>
-                    <span>-</span>
-                <% } %>
-            </td>
-            <td><%= sheet.sucursal %></td>
-            <td>
-                <a href="/my-routes/view-route/<%= sheet.id %>">Ver Detalles</a> <!-- Aquí se cambió la ruta -->
-                <% if (sheet.status === 'sent' && !sheet.received) { %>
-                    | <form action="/my-routes/mark-received/<%= sheet.id %>" method="POST" style="display:inline;"> <!-- Aquí también -->
-                        <button type="submit">Marcar como Recibido</button>
-                      </form>
-                <% } else if (sheet.received) { %>
-                    | <span>Recibido</span>
-                <% } %>
-            </td>
-        </tr>
-        <% }); %>
+    <div>
+        <input type="text" id="dateFilter" placeholder="Filtrar por intervalo de fechas..." />
+    </div>
+
+    <table border="1" id="routeTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha de Creación</th>
+                <th>Estado</th>
+                <th>Fecha de Recepción</th>
+                <th>Sucursal</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% routeSheets.forEach(sheet => { %>
+            <tr>
+                <td><%= sheet.id %></td>
+                <td class="creation-date-cell"><%= new Date(sheet.created_at).toLocaleDateString('es-ES') %></td>
+                <td><%= sheet.status %></td>
+                <td>
+                    <% if (sheet.received) { %>
+                        <%= new Date(sheet.fecha_recepcion).toLocaleDateString('es-ES') %>
+                    <% } else { %>
+                        <span>-</span>
+                    <% } %>
+                </td>
+                <td><%= sheet.sucursal %></td>
+                <td>
+                    <a href="/my-routes/view-route/<%= sheet.id %>">Ver Detalles</a>
+                    <% if (sheet.status === 'sent' && !sheet.received) { %>
+                        | <form action="/my-routes/mark-received/<%= sheet.id %>" method="POST" style="display:inline;">
+                            <button type="submit">Marcar como Recibido</button>
+                        </form>
+                    <% } else if (sheet.received) { %>
+                        | <span>Recibido</span>
+                    <% } %>
+                </td>
+            </tr>
+            <% }); %>
+        </tbody>
     </table>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Inicializar Flatpickr con rango de fechas
+        flatpickr("#dateFilter", {
+            mode: "range",
+            dateFormat: "d/m/Y",
+            onChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length === 2) {  // Verificar que ambas fechas (desde y hasta) estén seleccionadas
+                    filterByDateRange(selectedDates);
+                }
+            }
+        });
+
+        function filterByDateRange(dates) {
+            const startDate = dates[0];
+            const endDate = dates[1];
+            const rows = document.querySelectorAll('#routeTable tbody tr');
+
+            rows.forEach(row => {
+                const dateCell = row.querySelector('.creation-date-cell');
+                if (dateCell) {
+                    const [day, month, year] = dateCell.textContent.split('/');
+                    const rowDate = new Date(`${year}-${month}-${day}`); // Convertir la fecha a formato YYYY-MM-DD
+
+                    if (rowDate >= startDate && rowDate <= endDate) {
+                        row.style.display = "";
+                    } else {
+                        row.style.display = "none";
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>

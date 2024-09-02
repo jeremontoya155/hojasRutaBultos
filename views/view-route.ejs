@@ -24,7 +24,8 @@
     <% if (Object.keys(detailedBreakdown).length > 0) { %>
         <% for (let [tipo, codigos] of Object.entries(detailedBreakdown)) { %>
             <h4><%= tipo %></h4>
-            <table border="1">
+            <input type="text" placeholder="Buscar por código de barras..." onkeyup="filterTable(this, 'table-<%= tipo %>')" />
+            <table border="1" id="table-<%= tipo %>">
                 <tr>
                     <th>Código</th>
                 </tr>
@@ -40,5 +41,21 @@
     <% } %>
 
     <a href="/my-routes">Volver a mis hojas de ruta</a>
+
+    <script>
+        function filterTable(input, tableId) {
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById(tableId);
+            const trs = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < trs.length; i++) {
+                const td = trs[i].getElementsByTagName("td")[0];
+                if (td) {
+                    const txtValue = td.textContent || td.innerText;
+                    trs[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+                }
+            }
+        }
+    </script>
 </body>
 </html>
