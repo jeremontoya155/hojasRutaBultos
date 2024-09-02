@@ -4,36 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vista de Reparto - Hojas de Ruta</title>
-    <link rel="stylesheet" href="/css/reparto.css">  <!-- Asegúrate de que la ruta sea correcta -->
-
+    <link rel="stylesheet" href="/css/reparto.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
     <h2>Vista Completa de Hojas de Ruta</h2>
 
+    <div>
+        <input type="text" id="dateFilter" placeholder="Filtrar por intervalo de fechas..." />
+    </div>
+
     <% if (routeSheets.length > 0) { %>
         <% routeSheets.forEach(sheet => { %>
-            <h3>Hoja de Ruta ID: <%= sheet.id %> - Estado: <%= sheet.status %> - Recibido: <%= sheet.received ? 'Sí' : 'No' %></h3>
-            <table border="1">
-                <tr>
-                    <th>Sucursal</th>
-                    <th>Cantidad de Bultos</th>
-                    <th>Refrigerados</th>
-                    <th>Cantidad de Refrigerados</th>
-                </tr>
-                <% sheet.details.forEach(detail => { %>
-                <tr>
-                    <td><%= detail.sucursal %></td>
-                    <td><%= detail.cantidad_bultos %></td>
-                    <td><%= detail.refrigerados ? 'Sí' : 'No' %></td>
-                    <td><%= detail.refrigerados ? detail.cantidad_refrigerados : '-' %></td>
-                </tr>
-                <% }); %>
-            </table>
+            <div class="route-sheet" data-date="<%= new Date(sheet.created_at).toISOString().split('T')[0] %>">
+                <h3>Hoja de Ruta ID: <%= sheet.id %> - Estado: <%= sheet.status %> - Recibido: <%= sheet.received ? 'Sí' : 'No' %></h3>
+                <table border="1" id="table-<%= sheet.id %>">
+                    <thead>
+                        <tr>
+                            <th>Sucursal</th>
+                            <th>Total Bultos</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% sheet.sucursales.forEach(sucursal => { %>
+                            <tr>
+                                <td><%= sucursal.sucursal %></td>
+                                <td><%= sucursal.total_bultos %></td>
+                                <td><button onclick="toggleDetails('<%= sheet.id %>-<%= sucursal.sucursal %>')">Ver Detalles</button></td>
+                            </tr>
+                            <tr id="<%= sheet.id %>-<%= sucursal.sucursal %>" class="details" style="display:none;">
+                                <td colspan="3">
+                                    <table border="1">
+                                        <thead>
+                                            <tr>
+                                                <th>Tipo</th>
+                                                <th>Cantidad</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% Object.entries(sucursal.clasificacion).forEach(([tipo, cantidad]) => { %>
+                                                <tr>
+                                                    <td><%= tipo %></td>
+                                                    <td><%= cantidad %></td>
+                                                </tr>
+                                            <% }); %>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
         <% }); %>
     <% } else { %>
         <p>No se encontraron hojas de ruta.</p>
     <% } %>
 
-    
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Inicializar Flatpickr con rango de fechas
+        flatpickr("#dateFilter", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            onChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length === 2) {
+                    filterByDateRange(selectedDates);
+                }
+            }
+        });
+
+        function filterByDateRange(dates) {
+            const startDate = dates[0];
+            const endDate = dates[1];
+            const sheets = document.querySelectorAll('.route-sheet');
+
+            sheets.forEach(sheet => {
+                const sheetDate = new Date(sheet.getAttribute('data-date'));
+
+                if (sheetDate >= startDate && sheetDate <= endDate) {
+                    sheet.style.display = "block";
+                } else {
+                    sheet.style.display = "none";
+                }
+            });
+        }
+
+        function toggleDetails(id) {
+            const detailsElement = document.getElementById(id);
+            if (detailsElement.style.display === "none") {
+                detailsElement.style.display = "table-row";
+            } else {
+                detailsElement.style.display = "none";
+            }
+        }
+    </script>
 </body>
 </html>

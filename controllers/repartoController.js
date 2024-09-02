@@ -4,33 +4,59 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
+// Criterios de clasificación
+const classificationCriteria = {
+    "1": "Cajas",
+    "2": "Cubetas",
+    "3": "Refrigerado",
+    "4": "Bolsas",
+    "5": "Encargado",
+    "6": "Varios"
+};
+
 exports.viewAllRouteSheets = async (req, res) => {
     try {
-        // Obtener todas las hojas de ruta
-        const result = await pool.query('SELECT * FROM route_sheets ORDER BY created_at DESC');
+        const result = await pool.query('SELECT id, nombreHojaRuta, status, created_at, fecha_recepcion, received, repartidor FROM route_sheets ORDER BY created_at DESC');
         const routeSheets = result.rows;
 
-        // Verifica si realmente se están recuperando datos
-        console.log("Hojas de ruta obtenidas:", routeSheets);
-
-        // Obtener los detalles de cada hoja de ruta
         const detailsPromises = routeSheets.map(sheet => {
-            return pool.query('SELECT * FROM route_sheet_details WHERE route_sheet_id = $1', [sheet.id])
-                .then(result => {
-                    sheet.details = result.rows;
-                    return sheet;
+            return pool.query(`
+                SELECT rsd.sucursal, array_agg(rss.codigo) as codigos
+                FROM route_sheet_details rsd
+                LEFT JOIN route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
+                WHERE rsd.route_sheet_id = $1
+                GROUP BY rsd.sucursal
+            `, [sheet.id]).then(result => {
+                const sucursales = result.rows;
+
+                // Procesar el total de bultos y la clasificación
+                sheet.sucursales = sucursales.map(sucursal => {
+                    const codigos = sucursal.codigos || [];
+                    let clasificacion = {};
+
+                    codigos.forEach(codigo => {
+                        if (codigo) {  // Verificar que 'codigo' no sea null
+                            const tipo = classificationCriteria[codigo.charAt(0)] || "Desconocido";
+                            clasificacion[tipo] = (clasificacion[tipo] || 0) + 1;
+                        }
+                    });
+
+                    return {
+                        sucursal: sucursal.sucursal,
+                        total_bultos: codigos.length,
+                        clasificacion: clasificacion
+                    };
                 });
+
+                return sheet;
+            });
         });
 
         const routeSheetsWithDetails = await Promise.all(detailsPromises);
 
-        // Verifica si los detalles se están agregando correctamente
-        console.log("Hojas de ruta con detalles:", routeSheetsWithDetails);
-
         res.render('reparto', { routeSheets: routeSheetsWithDetails });
     } catch (err) {
         console.error(err);
-        res.send('Error al obtener las hojas de ruta.');
+        res.status(500).send('Error al obtener las hojas de ruta.');
     }
 };
-

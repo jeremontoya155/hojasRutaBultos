@@ -16,7 +16,7 @@ exports.loginUser = async (req, res) => {
             if (user.role === 'admin') {
                 res.redirect('/admin');  // Admin redirigido a la vista de administración
             } else if (user.role === 'reparto') {
-                res.redirect('/view-all-routes');  // Reparto redirigido a la vista de todas las rutas
+                res.redirect('/reparto/view-all-routes');  // Reparto redirigido a la vista de todas las rutas
             } else if (user.role === 'user') {
                 res.redirect('/my-routes');  // Usuarios con rol 'user' redirigidos a la vista de sus rutas
             } else {

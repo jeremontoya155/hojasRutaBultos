@@ -29,12 +29,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Rutas de autenticación no requieren protección
 app.use('/login', authRoutes);
 app.use('/', authRoutes);
-app.use('/my-routes', authMiddleware, userRoutes); 
 
 // Aplicar middleware a rutas protegidas
 app.use('/admin', authMiddleware, adminRoutes);
 app.use('/my-routes', authMiddleware, userRoutes); 
-app.use('/view-all-routes', authMiddleware, repartoRoutes);
+app.use('/reparto', authMiddleware, repartoRoutes);
 
 // Verificar la hora actual en Buenos Aires
 console.log("Hora actual en Buenos Aires: ", new Date().toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" }));
