@@ -1,3 +1,4 @@
+const moment = require('moment-timezone');
 const { Pool } = require('pg');
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -18,13 +19,12 @@ exports.getUserRouteSheets = async (req, res) => {
 
     try {
         const result = await pool.query(`
-            SELECT rs.*, rsd.sucursal, rss.codigo
+            SELECT DISTINCT ON (rs.id) rs.*, rsd.sucursal, rss.codigo
             FROM route_sheets rs
             JOIN route_sheet_details rsd ON rs.id = rsd.route_sheet_id
             LEFT JOIN route_sheet_scans rss ON rs.id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
             WHERE rsd.sucursal = $1
-            GROUP BY rs.id, rsd.sucursal, rss.codigo
-            ORDER BY rs.created_at DESC
+            ORDER BY rs.id, rs.created_at DESC
         `, [userSucursal]);
 
         const routeSheets = result.rows;
@@ -45,6 +45,7 @@ exports.getUserRouteSheets = async (req, res) => {
         res.status(500).send('Error al obtener las hojas de ruta.');
     }
 };
+
 
 // Ver los detalles de una hoja de ruta
 exports.viewRouteSheet = async (req, res) => {
@@ -109,22 +110,26 @@ exports.viewRouteSheet = async (req, res) => {
 };
 
 // Marcar como recibido
+// Marcar como recibido
 exports.markAsReceived = async (req, res) => {
     const routeSheetId = req.params.id;
     const user = req.session.user;
 
     try {
+        // Obtener la hora actual en la zona horaria de Argentina
+        const fechaRecepcion = moment.tz("America/Argentina/Buenos_Aires").format('YYYY-MM-DD HH:mm:ss');
+
         const result = await pool.query(`
             UPDATE route_sheets
-            SET received = TRUE, fecha_recepcion = NOW()
+            SET received = TRUE, fecha_recepcion = $2
             WHERE id = $1
             AND EXISTS (
                 SELECT 1
                 FROM route_sheet_details
                 WHERE route_sheet_id = $1
-                AND sucursal = $2
+                AND sucursal = $3
             )
-        `, [routeSheetId, user.sucursal]);
+        `, [routeSheetId, fechaRecepcion, user.sucursal]);
 
         if (result.rowCount > 0) {
             res.redirect('/my-routes');
@@ -136,7 +141,6 @@ exports.markAsReceived = async (req, res) => {
         res.status(500).send('Error al actualizar el estado de la hoja de ruta.');
     }
 };
-
 // Cargar la página de carga de nuevas hojas de ruta
 exports.loadRouteSheet = (req, res) => {
     res.render('load-route');
