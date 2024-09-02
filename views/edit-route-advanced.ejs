@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Hoja de Ruta ID: <%= routeSheetId %></title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+    <div class="nav">
+        <h2>Editar Hoja de Ruta ID: <%= routeSheetId %></h2>
+    </div>
+
+    <form action="/admin/update-route-advanced/<%= routeSheetId %>" method="POST">
+        <h3>Repartidor:</h3>
+        <select name="repartidor" required>
+            <% repartidores.forEach(repartidor => { %>
+                <option value="<%= repartidor.id %>" <%= (repartidor.id === routeSheet.repartidor) ? 'selected' : '' %>>
+                    <%= repartidor.nombre %>
+                </option>
+            <% }); %>
+        </select>
+
+        <h3>Detalles de Sucursales:</h3>
+        <div id="sucursales-container">
+            <% routeSheetDetails.forEach((detail, index) => { %>
+                <div class="sucursal-detail">
+                    <h4>Sucursal: <%= detail.sucursal %></h4>
+                    <label for="codigos_<%= index %>">Códigos de Barra:</label>
+                    <textarea name="codigos_<%= index %>" rows="5"><%= detail.codigos.join(', ') %></textarea>
+                    <input type="hidden" name="sucursal_<%= index %>" value="<%= detail.sucursal %>">
+                </div>
+            <% }); %>
+        </div>
+
+        <button type="button" onclick="addNewSucursal()">Agregar Nueva Sucursal</button>
+
+        <div id="new-sucursal-container"></div>
+
+        <button type="submit">Guardar Cambios</button>
+    </form>
+
+    <a href="/admin">Volver a la Lista de Hojas de Ruta</a>
+
+    <script>
+        function addNewSucursal() {
+            const index = document.querySelectorAll('.sucursal-detail').length;
+            const container = document.getElementById('new-sucursal-container');
+            
+            const sucursalDiv = document.createElement('div');
+            sucursalDiv.classList.add('sucursal-detail');
+
+            sucursalDiv.innerHTML = `
+                <h4>Nueva Sucursal:</h4>
+                <label for="sucursal_${index}">Sucursal:</label>
+                <input type="text" name="sucursal_${index}" required>
+                
+                <label for="codigos_${index}">Códigos de Barra:</label>
+                <textarea name="codigos_${index}" rows="5"></textarea>
+            `;
+
+            container.appendChild(sucursalDiv);
+        }
+    </script>
+</body>
+</html>

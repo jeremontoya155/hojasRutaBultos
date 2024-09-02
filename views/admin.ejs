@@ -73,7 +73,7 @@
                 <td><%= sheet.repartidor %></td>
                 <td>
                     <% if (sheet.status === 'pending') { %>
-                        <a href="/admin/edit-route/<%= sheet.id %>">Editar</a> | 
+                        <a href="/admin/edit-route-advanced/<%= sheet.id %>">Editar</a> | 
                         <a href="/admin/send-route/<%= sheet.id %>">Enviar</a>
                     <% } else if (sheet.status === 'sent') { %>
                         <span>Enviado</span> | 

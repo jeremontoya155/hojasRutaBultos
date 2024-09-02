@@ -285,3 +285,87 @@ exports.viewRouteSheetGeneral = async (req, res) => {
         res.send('Error al obtener los detalles de la hoja de ruta.');
     }
 };
+
+
+exports.editRouteSheetAdvanced = async (req, res) => {
+    const routeSheetId = req.params.id;
+
+    try {
+        const repartidoresResult = await pool.query('SELECT * FROM repartidores');
+        const repartidores = repartidoresResult.rows;
+
+        const routeSheetResult = await pool.query('SELECT * FROM route_sheets WHERE id = $1', [routeSheetId]);
+        const routeSheet = routeSheetResult.rows[0];
+
+        const detailsResult = await pool.query(`
+            SELECT rsd.sucursal, rsd.cantidad_bultos, rsd.refrigerados, rsd.cantidad_refrigerados, array_agg(rss.codigo) as codigos
+            FROM route_sheet_details rsd
+            LEFT JOIN route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
+            WHERE rsd.route_sheet_id = $1
+            GROUP BY rsd.sucursal, rsd.cantidad_bultos, rsd.refrigerados, rsd.cantidad_refrigerados
+        `, [routeSheetId]);
+        const routeSheetDetails = detailsResult.rows;
+
+        res.render('edit-route-advanced', {
+            routeSheetId,
+            routeSheet,
+            routeSheetDetails,
+            repartidores
+        });
+    } catch (err) {
+        console.error(err);
+        res.send('Error al cargar la vista de edición avanzada.');
+    }
+};
+
+
+exports.updateRouteSheetAdvanced = async (req, res) => {
+    const routeSheetId = req.params.id;
+    const { repartidor } = req.body;
+
+    try {
+        await pool.query('UPDATE route_sheets SET repartidor = $1 WHERE id = $2', [
+            repartidor,
+            routeSheetId
+        ]);
+
+        // Eliminar detalles existentes
+        await pool.query('DELETE FROM route_sheet_details WHERE route_sheet_id = $1', [routeSheetId]);
+
+        const keys = Object.keys(req.body);
+        const sucursales = keys.filter(key => key.startsWith('sucursal_')).map(key => req.body[key]);
+        const codigos = keys.filter(key => key.startsWith('codigos_')).map(key => req.body[key].split(',').map(c => c.trim()));
+
+        for (let i = 0; i < sucursales.length; i++) {
+            const sucursal = sucursales[i];
+            const codigosArray = codigos[i];
+
+            await pool.query('INSERT INTO route_sheet_details (route_sheet_id, sucursal, cantidad_bultos, refrigerados, cantidad_refrigerados) VALUES ($1, $2, $3, $4, $5)', [
+                routeSheetId,
+                sucursal,
+                codigosArray.length,
+                false,
+                0
+            ]);
+
+            for (let codigo of codigosArray) {
+                try {
+                    await pool.query('INSERT INTO route_sheet_scans (route_sheet_id, sucursal, codigo) VALUES ($1, $2, $3)', [
+                        routeSheetId,
+                        sucursal,
+                        codigo
+                    ]);
+                } catch (err) {
+                    if (err.code !== '23505') { // Ignorar errores de duplicados
+                        throw err;
+                    }
+                }
+            }
+        }
+
+        res.redirect('/admin');
+    } catch (err) {
+        console.error(err);
+        res.send('Error al actualizar la hoja de ruta.');
+    }
+};

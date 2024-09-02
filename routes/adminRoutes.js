@@ -14,6 +14,8 @@ router.get('/view-route-general/:id', adminController.viewRouteSheetGeneral);
 router.get('/route-detail/:id/:sucursal', adminController.viewRouteSheetDetail);
 router.get('/edit-route-detail/:id/:sucursal', adminController.editRouteSheetDetail);  // Ruta para editar detalles de una sucursal
 router.post('/update-route-detail/:id/:sucursal', adminController.updateRouteSheetDetail); // Ruta para actualizar detalles de una sucursal
+router.get('/edit-route-advanced/:id', adminController.editRouteSheetAdvanced);
+router.post('/update-route-advanced/:id', adminController.updateRouteSheetAdvanced);
 
 module.exports = router;
 
