@@ -206,3 +206,22 @@ h3 {
     text-align: center;
     margin-bottom: 10px;
 }
+
+
+/* Efecto de desvanecimiento al salir */
+.fade-out {
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+/* Efecto de desvanecimiento al entrar */
+.fade-in {
+    opacity: 0;
+    animation: fadeInAnimation 1s forwards;
+}
+
+@keyframes fadeInAnimation {
+    to {
+        opacity: 1;
+    }
+}

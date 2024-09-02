@@ -162,6 +162,37 @@
                 document.getElementById('routeForm').submit();
             }
         });
+
+        document.addEventListener('DOMContentLoaded', () => {
+    // Aplicar el efecto de fade-in cuando la página se carga
+    document.body.classList.add('fade-in');
+
+    // Función para aplicar fade-out y redirigir a la nueva página
+    function applyFadeOutAndRedirect(url) {
+        document.body.classList.add('fade-out');
+        setTimeout(() => {
+            window.location.href = url;
+        }, 1000); // Debe coincidir con la duración de la transición en CSS
+    }
+
+    // Asignar el evento de click al botón de "Cargar Hoja de Ruta"
+    const loadRouteButton = document.querySelector('.tab-buttons button');
+    if (loadRouteButton) {
+        loadRouteButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            applyFadeOutAndRedirect(loadRouteButton.getAttribute('onclick').split("'")[1]);
+        });
+    }
+
+    // Añadir el mismo efecto a otros enlaces de navegación si es necesario
+    document.querySelectorAll('a').forEach(anchor => {
+        anchor.addEventListener('click', (e) => {
+            e.preventDefault();
+            applyFadeOutAndRedirect(anchor.href);
+        });
+    });
+});
+
     </script>
     
 </body>
