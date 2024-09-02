@@ -63,6 +63,15 @@
         const summaryList = document.getElementById('summaryList');
         const deleteSection = document.getElementById('delete-section');
 
+        const classificationCriteria = {
+            "1": "Cajas",
+            "2": "Cubetas",
+            "3": "Refrigerado",
+            "4": "Bolsas",
+            "5": "Encargado",
+            "6": "Varios"
+        };
+
         repartidorSelect.addEventListener('change', function() {
             const ruta = this.options[this.selectedIndex].getAttribute('data-ruta');
             sucursalSelect.innerHTML = '<option value="" disabled selected>Selecciona una sucursal</option>';
@@ -93,9 +102,10 @@
                 if (codigoList.includes(codigo)) {
                     alert(`El código ${codigo} ya ha sido escaneado.`);
                 } else {
-                    codigoList.push(codigo);
+                    const tipo = classificationCriteria[codigo.charAt(0)] || "Desconocido";
+                    codigoList.push({codigo, tipo});
                     const li = document.createElement('li');
-                    li.innerHTML = `<input type="checkbox" class="codigo-checkbox"> ${codigo}`;
+                    li.innerHTML = `<input type="checkbox" class="codigo-checkbox"> ${codigo} - <strong>${tipo}</strong>`;
                     document.getElementById('codigoList').appendChild(li);
                 }
     
@@ -118,7 +128,7 @@
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = 'data[]';
-                input.value = JSON.stringify({ sucursal: sucursal, codigos: codigoList });
+                input.value = JSON.stringify({ sucursal: sucursal, codigos: codigoList.map(c => c.codigo) });
                 document.getElementById('routeForm').appendChild(input);
     
                 codigoList = [];
@@ -137,8 +147,8 @@
             const checkboxes = document.querySelectorAll('.codigo-checkbox:checked');
             checkboxes.forEach(checkbox => {
                 const li = checkbox.parentElement;
-                const codigo = li.textContent.trim();
-                codigoList = codigoList.filter(c => c !== codigo);
+                const codigo = li.textContent.split(' - ')[0].trim();
+                codigoList = codigoList.filter(c => c.codigo !== codigo);
                 li.remove();
             });
             document.getElementById('confirmSucursal').disabled = codigoList.length === 0;
@@ -156,4 +166,3 @@
     
 </body>
 </html>
-

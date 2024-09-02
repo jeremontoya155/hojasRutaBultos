@@ -31,10 +31,14 @@ exports.createRouteSheet = async (req, res) => {
     const { repartidor, data } = req.body;
 
     try {
-        const result = await pool.query('INSERT INTO route_sheets (status, repartidor, created_at) VALUES ($1, $2, NOW()) RETURNING id', [
+        const result = await pool.query(`
+            INSERT INTO route_sheets (status, repartidor) 
+            VALUES ($1, $2) 
+            RETURNING id`, [
             'pending',
             repartidor
         ]);
+
         const routeSheetId = result.rows[0].id;
 
         const nombreHojaRuta = `Hoja de ruta ID ${routeSheetId}`;
@@ -58,8 +62,8 @@ exports.createRouteSheet = async (req, res) => {
                     [routeSheetId, sucursal, cantidadBultos, false, 0]
                 );
 
-                // Guardar los códigos escaneados en `route_sheet_scans`
-                const queryText = 'INSERT INTO route_sheet_scans (route_sheet_id, sucursal, codigo) VALUES ($1, $2, $3)';
+                // Verificar e insertar los códigos escaneados en `route_sheet_scans`
+                const queryText = 'INSERT INTO route_sheet_scans (route_sheet_id, sucursal, codigo) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING';
                 for (let codigo of codigos) {
                     await client.query(queryText, [routeSheetId, sucursal, codigo]);
                 }
@@ -83,7 +87,12 @@ exports.receiveRouteSheet = async (req, res) => {
     const routeSheetId = req.params.id;
 
     try {
-        await pool.query('UPDATE route_sheets SET received = TRUE, fecha_recepcion = NOW() WHERE id = $1', [routeSheetId]);
+        // Usar la hora de Buenos Aires al actualizar el registro de recepción
+        await pool.query(`
+            UPDATE route_sheets 
+            SET received = TRUE, fecha_recepcion = NOW() AT TIME ZONE 'America/Argentina/Buenos_Aires' 
+            WHERE id = $1`, [routeSheetId]);
+
         res.redirect('/admin');
     } catch (err) {
         console.error(err);
