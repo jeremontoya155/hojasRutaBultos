@@ -15,7 +15,7 @@
 
         <input type="text" id="filterInput" placeholder="Filtrar por código de barra...">
         <select id="filterType" class="filter-select">
-            <option value="">Filtrar por tipo...</option>
+            <option value="">Todos los tipos</option>
             <% Object.keys(classificationCriteria).forEach(key => { %>
                 <option value="<%= classificationCriteria[key] %>"><%= classificationCriteria[key] %></option>
             <% }); %>
