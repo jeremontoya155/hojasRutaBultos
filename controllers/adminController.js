@@ -18,7 +18,35 @@ const classificationCriteria = {
 
 exports.getRouteSheets = async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, nombreHojaRuta, status, created_at, fecha_recepcion, received, repartidor FROM route_sheets ORDER BY created_at DESC');
+        const result = await pool.query(`
+            SELECT 
+                rs.id, 
+                rs.nombrehojaruta, 
+                rs.status, 
+                rs.created_at, 
+                rs.fecha_recepcion, 
+                rs.received, 
+                rs.repartidor, 
+                SUM(rsd.cantidad_bultos) AS total_bultos, 
+                BOOL_OR(SUBSTRING(rss.codigo FROM 1 FOR 1) = '3') AS tiene_refrigerados
+            FROM 
+                route_sheets rs
+            LEFT JOIN 
+                route_sheet_details rsd ON rs.id = rsd.route_sheet_id
+            LEFT JOIN
+                route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id
+            GROUP BY 
+                rs.id, 
+                rs.nombrehojaruta, 
+                rs.status, 
+                rs.created_at, 
+                rs.fecha_recepcion, 
+                rs.received, 
+                rs.repartidor
+            ORDER BY 
+                rs.created_at DESC
+        `);
+        
         const routeSheets = result.rows;
         res.render('admin', { routeSheets });
     } catch (err) {
@@ -26,6 +54,10 @@ exports.getRouteSheets = async (req, res) => {
         res.send('Error al obtener las hojas de ruta.');
     }
 };
+
+
+
+
 
 exports.createRouteSheet = async (req, res) => {
     const { repartidor, data } = req.body;
