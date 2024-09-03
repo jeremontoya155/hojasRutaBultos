@@ -387,7 +387,6 @@ exports.viewRouteSheetGeneral = async (req, res) => {
     }
 };
 
-
 exports.editRouteSheetAdvanced = async (req, res) => {
     const routeSheetId = req.params.id;
 
@@ -408,19 +407,37 @@ exports.editRouteSheetAdvanced = async (req, res) => {
         const routeSheet = routeSheetResult.rows[0];
 
         const detailsResult = await pool.query(`
-            SELECT rsd.sucursal, rsd.cantidad_bultos, rsd.refrigerados, rsd.cantidad_refrigerados, array_agg(rss.codigo) as codigos
+            SELECT rsd.sucursal, array_agg(rss.codigo) as codigos
             FROM route_sheet_details rsd
             LEFT JOIN route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
             WHERE rsd.route_sheet_id = $1
-            GROUP BY rsd.sucursal, rsd.cantidad_bultos, rsd.refrigerados, rsd.cantidad_refrigerados
+            GROUP BY rsd.sucursal
         `, [routeSheetId]);
+
         const routeSheetDetails = detailsResult.rows.map(detail => {
+            let sucursalSummary = {
+                "Cajas": 0,
+                "Cubetas": 0,
+                "Refrigerado": 0,
+                "Bolsas": 0,
+                "Encargado": 0,
+                "Varios": 0
+            };
+
+            detail.codigos.forEach(codigo => {
+                const tipo = classificationCriteria[codigo.charAt(0)] || "Desconocido";
+                if (sucursalSummary[tipo] !== undefined) {
+                    sucursalSummary[tipo]++;
+                }
+            });
+
             return {
                 ...detail,
                 codigos: detail.codigos.map(codigo => ({
                     codigo,
                     categoria: classificationCriteria[codigo.charAt(0)] || "Desconocido"
-                }))
+                })),
+                sucursalSummary
             };
         });
 
@@ -437,6 +454,8 @@ exports.editRouteSheetAdvanced = async (req, res) => {
         res.send('Error al cargar la vista de edición avanzada.');
     }
 };
+
+
 exports.updateRouteSheetAdvanced = async (req, res) => {
     const routeSheetId = req.params.id;
     const { delete_codes } = req.body;
@@ -465,17 +484,23 @@ exports.updateRouteSheetAdvanced = async (req, res) => {
             const sucursal = sucursales[i];
             const codigosArray = req.body[codigosKeys[i]].split(',').map(codigo => codigo.trim());
 
+            // Validar si hay códigos duplicados
+            const uniqueCodes = [...new Set(codigosArray)];
+            if (uniqueCodes.length !== codigosArray.length) {
+                return res.status(400).send('Error: Existen códigos de barra duplicados.');
+            }
+
             // Insertamos los detalles de la sucursal
             await pool.query('INSERT INTO route_sheet_details (route_sheet_id, sucursal, cantidad_bultos, refrigerados, cantidad_refrigerados) VALUES ($1, $2, $3, $4, $5)', [
                 routeSheetId,
                 sucursal,
-                codigosArray.length,
+                uniqueCodes.length,
                 false,
                 0
             ]);
 
             // Insertamos los códigos escaneados asociados a la sucursal
-            for (let codigo of codigosArray) {
+            for (let codigo of uniqueCodes) {
                 const categoria = classificationCriteria[codigo.charAt(0)] || "Desconocido";
                 try {
                     await pool.query('INSERT INTO route_sheet_scans (route_sheet_id, sucursal, codigo, categoria) VALUES ($1, $2, $3, $4)', [
@@ -485,7 +510,7 @@ exports.updateRouteSheetAdvanced = async (req, res) => {
                         categoria
                     ]);
                 } catch (err) {
-                    if (err.code !== '23505') { // Ignorar errores de duplicados
+                    if (err.code !== '23505') { // Ignorar errores de duplicados en la base de datos
                         throw err;
                     }
                 }
