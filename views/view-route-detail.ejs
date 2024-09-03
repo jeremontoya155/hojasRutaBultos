@@ -14,19 +14,27 @@
     <div class="contenedorBody">
 
         <input type="text" id="filterInput" placeholder="Filtrar por código de barra...">
-    
+        <select id="filterType" class="filter-select">
+            <option value="">Filtrar por tipo...</option>
+            <% Object.keys(classificationCriteria).forEach(key => { %>
+                <option value="<%= classificationCriteria[key] %>"><%= classificationCriteria[key] %></option>
+            <% }); %>
+        </select>
+
         <table border="1">
             <thead>
                 <tr>
-                    <th>ID del Código</th>
-                    <th>Código</th>
+                    <th>Código de Barra</th>
+                    <th>Tipo</th>
                 </tr>
             </thead>
             <tbody id="codeTable">
-                <% routeSheetDetails.forEach(detail => { %>
+                <% routeSheetDetails.forEach(detail => { 
+                    const tipo = classificationCriteria[detail.codigo.charAt(0)];
+                %>
                 <tr>
-                    <td><%= detail.id %></td>
                     <td><%= detail.codigo %></td>
+                    <td><%= tipo %></td>
                 </tr>
                 <% }); %>
             </tbody>
@@ -38,15 +46,22 @@
     </div>
 
     <script>
-        // Filtro de tabla
-        document.getElementById('filterInput').addEventListener('keyup', function() {
-            const filter = this.value.toLowerCase();
+        // Filtro de tabla por código de barra y por tipo
+        document.getElementById('filterInput').addEventListener('keyup', filterTable);
+        document.getElementById('filterType').addEventListener('change', filterTable);
+
+        function filterTable() {
+            const filterCode = document.getElementById('filterInput').value.toLowerCase();
+            const filterType = document.getElementById('filterType').value.toLowerCase();
             const rows = document.querySelectorAll('#codeTable tr');
             let visibleRows = 0;
 
             rows.forEach(row => {
-                const codeCell = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-                if (codeCell.includes(filter)) {
+                const codeCell = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                const typeCell = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+
+                if ((codeCell.includes(filterCode) || !filterCode) &&
+                    (typeCell.includes(filterType) || !filterType)) {
                     row.style.display = '';
                     visibleRows++;
                 } else {
@@ -55,7 +70,7 @@
             });
 
             document.getElementById('noResults').style.display = visibleRows ? 'none' : 'block';
-        });
+        }
     </script>
 </body>
 </html>

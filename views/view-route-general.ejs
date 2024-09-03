@@ -24,7 +24,7 @@
                 <th>Varios</th>
                 <th>Total Bultos</th>
                 <th>Acciones</th>
-                <th>Seleccionar</th>
+            
             </tr>
         </thead>
         <tbody>
@@ -42,9 +42,7 @@
                     <td>
                         <a href="/admin/route-detail/<%= routeSheetId %>/<%= detail.sucursal %>">Ver Detalles</a>
                     </td>
-                    <td>
-                        <button class="select-sucursal" data-sucursal="<%= detail.sucursal %>" data-summary='<%= JSON.stringify(detail.sucursalSummary) %>'>Seleccionar</button>
-                    </td>
+                
                 </tr>
                 <% }); %>
             <% } else { %>
@@ -55,20 +53,7 @@
         </tbody>
     </table>
     
-    <h3>Resumen por Tipo de Código de Barra</h3>
-    <table id="ResumenTipos">
-        <thead>
-            <tr>
-                <th>Tipo</th>
-                <th>Cantidad</th>
-            </tr>
-        </thead>
-        <tbody id="summaryByType">
-            <tr>
-                <td colspan="2">Seleccione una sucursal para ver el resumen.</td>
-            </tr>
-        </tbody>
-    </table>
+   
 
     <a href="/admin">Volver a mis hojas de ruta</a>
 

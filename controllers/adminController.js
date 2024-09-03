@@ -289,16 +289,27 @@ exports.loadRouteSheet = async (req, res) => {
 exports.viewRouteSheetDetail = async (req, res) => {
     const { id, sucursal } = req.params;
 
+    // Definición de classificationCriteria
+    const classificationCriteria = {
+        "1": "Cajas",
+        "2": "Cubetas",
+        "3": "Refrigerado",
+        "4": "Bolsas",
+        "5": "Encargado",
+        "6": "Varios"
+    };
+
     try {
         const detailsResult = await pool.query('SELECT id, codigo FROM route_sheet_scans WHERE route_sheet_id = $1 AND sucursal = $2', [id, sucursal]);
         const routeSheetDetails = detailsResult.rows;
 
-        res.render('view-route-detail', { routeSheetId: id, sucursal, routeSheetDetails });
+        res.render('view-route-detail', { routeSheetId: id, sucursal, routeSheetDetails, classificationCriteria });
     } catch (err) {
         console.error(err);
         res.send('Error al obtener los detalles de la sucursal.');
     }
 };
+
 
 exports.viewRouteSheet = async (req, res) => {
     const routeSheetId = req.params.id;
