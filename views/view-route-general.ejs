@@ -16,10 +16,15 @@
         <thead>
             <tr>
                 <th>Sucursal</th>
-                <th>Cantidad de Bultos</th>
-                <th>Refrigerados</th>
-                <th>Cantidad de Refrigerados</th>
+                <th>Cajas</th>
+                <th>Cubetas</th>
+                <th>Refrigerado</th>
+                <th>Bolsas</th>
+                <th>Encargado</th>
+                <th>Varios</th>
+                <th>Total Bultos</th>
                 <th>Acciones</th>
+                <th>Seleccionar</th>
             </tr>
         </thead>
         <tbody>
@@ -27,17 +32,24 @@
                 <% routeSheetDetails.forEach(detail => { %>
                 <tr>
                     <td><%= detail.sucursal %></td>
+                    <td><%= detail.sucursalSummary["Cajas"] || 0 %></td>
+                    <td><%= detail.sucursalSummary["Cubetas"] || 0 %></td>
+                    <td><%= detail.sucursalSummary["Refrigerado"] || 0 %></td>
+                    <td><%= detail.sucursalSummary["Bolsas"] || 0 %></td>
+                    <td><%= detail.sucursalSummary["Encargado"] || 0 %></td>
+                    <td><%= detail.sucursalSummary["Varios"] || 0 %></td>
                     <td><%= detail.cantidad_bultos %></td>
-                    <td><%= detail.refrigerados ? 'Sí' : 'No' %></td>
-                    <td><%= detail.cantidad_refrigerados %></td>
                     <td>
                         <a href="/admin/route-detail/<%= routeSheetId %>/<%= detail.sucursal %>">Ver Detalles</a>
+                    </td>
+                    <td>
+                        <button class="select-sucursal" data-sucursal="<%= detail.sucursal %>" data-summary='<%= JSON.stringify(detail.sucursalSummary) %>'>Seleccionar</button>
                     </td>
                 </tr>
                 <% }); %>
             <% } else { %>
                 <tr>
-                    <td colspan="5">No hay detalles disponibles para esta hoja de ruta.</td>
+                    <td colspan="10">No hay detalles disponibles para esta hoja de ruta.</td>
                 </tr>
             <% } %>
         </tbody>
@@ -51,22 +63,37 @@
                 <th>Cantidad</th>
             </tr>
         </thead>
-        <tbody>
-            <% if (Object.keys(summaryByType).length > 0) { %>
-                <% for (let tipo in summaryByType) { %>
-                <tr>
-                    <td><%= tipo %></td>
-                    <td><%= summaryByType[tipo] %></td>
-                </tr>
-                <% } %>
-            <% } else { %>
-                <tr>
-                    <td colspan="2">No hay códigos de barra categorizados.</td>
-                </tr>
-            <% } %>
+        <tbody id="summaryByType">
+            <tr>
+                <td colspan="2">Seleccione una sucursal para ver el resumen.</td>
+            </tr>
         </tbody>
     </table>
 
     <a href="/admin">Volver a mis hojas de ruta</a>
+
+    <script>
+        document.querySelectorAll('.select-sucursal').forEach(button => {
+            button.addEventListener('click', function() {
+                const sucursal = this.dataset.sucursal;
+                const summary = JSON.parse(this.dataset.summary);
+
+                // Actualizar la tabla con el resumen por tipo
+                const summaryByType = document.getElementById('summaryByType');
+                summaryByType.innerHTML = '';
+                for (let tipo in summary) {
+                    const row = document.createElement('tr');
+                    const tipoCell = document.createElement('td');
+                    tipoCell.textContent = tipo;
+                    const cantidadCell = document.createElement('td');
+                    cantidadCell.textContent = summary[tipo];
+                    row.appendChild(tipoCell);
+                    row.appendChild(cantidadCell);
+                    summaryByType.appendChild(row);
+                }
+            });
+        });
+    </script>
+
 </body>
 </html>

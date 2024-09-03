@@ -15,7 +15,6 @@ const classificationCriteria = {
     "6": "Varios"
 };
 
-
 exports.getRouteSheets = async (req, res) => {
     try {
         const result = await pool.query(`
@@ -27,7 +26,7 @@ exports.getRouteSheets = async (req, res) => {
                 rs.fecha_recepcion, 
                 rs.received, 
                 rs.repartidor, 
-                SUM(rsd.cantidad_bultos) AS total_bultos, 
+                COALESCE(SUM(DISTINCT rsd.cantidad_bultos), 0) AS total_bultos, 
                 BOOL_OR(SUBSTRING(rss.codigo FROM 1 FOR 1) = '3') AS tiene_refrigerados
             FROM 
                 route_sheets rs
@@ -54,6 +53,7 @@ exports.getRouteSheets = async (req, res) => {
         res.send('Error al obtener las hojas de ruta.');
     }
 };
+
 
 
 
@@ -371,7 +371,8 @@ exports.viewRouteSheetGeneral = async (req, res) => {
                 sucursal: detail.sucursal,
                 cantidad_bultos: codigos.length,
                 refrigerados,
-                cantidad_refrigerados: cantidadRefrigerados
+                cantidad_refrigerados: cantidadRefrigerados,
+                sucursalSummary
             });
         });
 

@@ -33,7 +33,7 @@
             <select id="filterReceived" onchange="filterTable()">
                 <option value="">Todos</option>
                 <option value="recibido">Recibido</option>
-                <option value="en camino">En camino</option>
+                <option value="en preparacion">En Preparacion</option>
             </select>
             
             <input type="text" id="filterRepartidor" placeholder="Filtrar por Repartidor" onkeyup="filterTable()">
@@ -67,7 +67,7 @@
                     <% if (sheet.received) { %>
                         <span>Recibido</span>
                     <% } else { %>
-                        <span>En camino</span>
+                        <span>En preparacion</span>
                     <% } %>
                 </td>
                 <td><%= sheet.repartidor %></td>
