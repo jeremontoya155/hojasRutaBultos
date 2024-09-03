@@ -19,6 +19,7 @@
                 <option value="<%= repartidor.nombre %>" data-ruta="<%= repartidor.recorrido %>"><%= repartidor.nombre %></option>
                 <% }); %>
             </select>
+            <button type="button" id="editRepartidor" style="display:none;">Editar Repartidor</button>
         </div>
     
         <!-- Selección de Sucursal y Escaneo de Códigos -->
@@ -46,6 +47,7 @@
         <div id="summary-section" style="display: none;">
             <h3>Resumen de Cargas</h3>
             <ul id="summaryList"></ul>
+            <div id="summaryDetail"></div> <!-- Aquí se mostrará el desglose de tipos -->
             <button type="submit" id="finishLoading">Finalizar y Guardar Hoja de Ruta</button>
         </div>
     </form>
@@ -61,6 +63,7 @@
         const codigoQRInput = document.getElementById('codigoQR');
         let codigoList = [];
         const summaryList = document.getElementById('summaryList');
+        const summaryDetail = document.getElementById('summaryDetail');
         const deleteSection = document.getElementById('delete-section');
 
         const classificationCriteria = {
@@ -86,6 +89,27 @@
                 });
     
                 document.getElementById('route-sheet').style.display = 'block';
+                repartidorSelect.disabled = true; // Deshabilitar el select de repartidor
+
+                // Mostrar el botón de edición
+                document.getElementById('editRepartidor').style.display = 'inline-block';
+            }
+        });
+
+        document.getElementById('editRepartidor').addEventListener('click', function() {
+            if (confirm('¿Deseas cambiar el repartidor y reiniciar la carga?')) {
+                // Resetear el formulario y habilitar el select de repartidor
+                repartidorSelect.disabled = false;
+                repartidorSelect.value = '';
+                sucursalSelect.innerHTML = '<option value="" disabled selected>Selecciona una sucursal</option>';
+                document.getElementById('route-sheet').style.display = 'none';
+                document.getElementById('scanning-section').style.display = 'none';
+                document.getElementById('summary-section').style.display = 'none';
+                codigoList = [];
+                document.getElementById('codigoList').innerHTML = '';
+                summaryList.innerHTML = '';
+                summaryDetail.innerHTML = '';
+                document.getElementById('editRepartidor').style.display = 'none'; // Ocultar el botón de edición
             }
         });
     
@@ -99,11 +123,12 @@
                 e.preventDefault();
                 const codigo = this.value.trim();
     
-                if (codigoList.includes(codigo)) {
-                    alert(`El código ${codigo} ya ha sido escaneado.`);
+                // Verificar si el código ya ha sido escaneado en la misma sucursal
+                if (codigoList.some(c => c.codigo === codigo)) {
+                    alert(`El código ${codigo} ya ha sido escaneado para esta sucursal.`);
                 } else {
                     const tipo = classificationCriteria[codigo.charAt(0)] || "Desconocido";
-                    codigoList.push({codigo, tipo});
+                    codigoList.push({ codigo, tipo });
                     const li = document.createElement('li');
                     li.innerHTML = `<input type="checkbox" class="codigo-checkbox"> ${codigo} - <strong>${tipo}</strong>`;
                     document.getElementById('codigoList').appendChild(li);
@@ -122,7 +147,7 @@
     
             if (confirm(`¿Desea confirmar la carga para la sucursal ${sucursal}?`)) {
                 const li = document.createElement('li');
-                li.textContent = `Sucursal ${sucursal}: ${cantidadBultos} códigos escaneados.`;
+                li.textContent = `Sucursal ${sucursal}\nTotal de cargas:${cantidadBultos} `;
                 summaryList.appendChild(li);
     
                 const input = document.createElement('input');
@@ -130,7 +155,20 @@
                 input.name = 'data[]';
                 input.value = JSON.stringify({ sucursal: sucursal, codigos: codigoList.map(c => c.codigo) });
                 document.getElementById('routeForm').appendChild(input);
-    
+
+                // Generar el resumen detallado por tipo
+                const summary = codigoList.reduce((acc, curr) => {
+                    acc[curr.tipo] = (acc[curr.tipo] || 0) + 1;
+                    return acc;
+                }, {});
+
+                let summaryHtml = '<h4>Detalle de tipos:</h4><ul>';
+                for (const [tipo, cantidad] of Object.entries(summary)) {
+                    summaryHtml += `<li>${tipo}: ${cantidad}</li>`;
+                }
+                summaryHtml += '</ul>';
+                summaryDetail.innerHTML = summaryHtml;
+
                 codigoList = [];
                 document.getElementById('codigoList').innerHTML = '';
                 document.getElementById('scanning-section').style.display = 'none';
@@ -164,34 +202,30 @@
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-    // Aplicar el efecto de fade-in cuando la página se carga
-    document.body.classList.add('fade-in');
+            // Aplicar el efecto de fade-in cuando la página se carga
+            document.body.classList.add('fade-in');
 
-    // Función para aplicar fade-out y redirigir a la nueva página
-    function applyFadeOutAndRedirect(url) {
-        document.body.classList.add('fade-out');
-        setTimeout(() => {
-            window.location.href = url;
-        }, 1000); // Debe coincidir con la duración de la transición en CSS
-    }
+            // Función para aplicar fade-out y redirigir a la nueva página
+            function applyFadeOutAndRedirect(url) {
+                document.body.classList.add('fade-out');
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 1000); // Debe coincidir con la duración de la transición en CSS
+            }
 
-    // Asignar el evento de click al botón de "Cargar Hoja de Ruta"
-    const loadRouteButton = document.querySelector('.tab-buttons button');
-    if (loadRouteButton) {
-        loadRouteButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            applyFadeOutAndRedirect(loadRouteButton.getAttribute('onclick').split("'")[1]);
+            // Añadir el efecto fade-out a los enlaces y botones de navegación
+            document.querySelectorAll('a, button').forEach(element => {
+                element.addEventListener('click', (e) => {
+                    if (element.tagName.toLowerCase() === 'a' && element.href) {
+                        e.preventDefault();
+                        applyFadeOutAndRedirect(element.href);
+                    } else if (element.tagName.toLowerCase() === 'button' && element.onclick) {
+                        e.preventDefault();
+                        applyFadeOutAndRedirect(element.getAttribute('onclick').split("'")[1]);
+                    }
+                });
+            });
         });
-    }
-
-    // Añadir el mismo efecto a otros enlaces de navegación si es necesario
-    document.querySelectorAll('a').forEach(anchor => {
-        anchor.addEventListener('click', (e) => {
-            e.preventDefault();
-            applyFadeOutAndRedirect(anchor.href);
-        });
-    });
-});
 
     </script>
     
