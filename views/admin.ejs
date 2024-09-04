@@ -46,7 +46,7 @@
                 <th>Nombre</th>
                 <th>Fecha de Creación</th>
                 <th>Fecha de Recepción</th>
-                <th>Estado</th>
+          
                 <th>Situación</th> <!-- Nueva columna de situación -->
                 <th>Repartidor</th>
                 <th>Total Bultos</th>
@@ -64,13 +64,7 @@
                         <span>-</span>
                     <% } %>
                 </td>
-                <td>
-                    <% if (sheet.received) { %>
-                        <span>Recibido</span>
-                    <% } else { %>
-                        <span>En preparación</span>
-                    <% } %>
-                </td>
+            
                 <td>
                     <%= sheet.situacion %> <!-- Mostrar la situación aquí -->
                 </td>
