@@ -8,6 +8,10 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 h2 {
@@ -21,7 +25,7 @@ h2 {
 .filter-container {
     width: 100%;
     max-width: 600px;
-    margin: 20px 0;
+    margin: 10px 0 20px 0;
 }
 
 input#dateFilter {
@@ -42,8 +46,9 @@ input#dateFilter {
     margin-bottom: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
     width: 100%;
-    max-width: 600px;
+    max-width: 100%;  /* Asegura que ocupe todo el ancho en móviles */
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 .route-sheet h3 {
@@ -63,13 +68,15 @@ input#dateFilter {
 button {
     background-color: #3498db;
     color: white;
-    padding: 10px 20px;
-    font-size: 1rem;
+    padding: 12px;
+    font-size: 1.1rem;
     border-radius: 8px;
     border: none;
     cursor: pointer;
     margin-bottom: 10px;
     transition: background-color 0.3s ease;
+    width: 100%;
+    max-width: 300px;
 }
 
 button:hover {
@@ -139,15 +146,15 @@ tr:hover {
         border-bottom: 1px solid #f1f1f1;
     }
 
-    td:last-child {
-        border-bottom: none;
-    }
-
     td:before {
         content: attr(data-label);
         font-weight: bold;
         color: #2980b9;
         flex-basis: 50%;
+    }
+
+    td:last-child {
+        border-bottom: none;
     }
 
     /* Ajustes de tipografía */
@@ -167,5 +174,9 @@ tr:hover {
 
     input#dateFilter {
         font-size: 1.1rem;
+    }
+
+    .route-sheet {
+        padding: 12px;
     }
 }
