@@ -16,7 +16,13 @@ const classificationCriteria = {
 
 exports.viewAllRouteSheets = async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, nombreHojaRuta, status, situacion, created_at, fecha_recepcion, received, repartidor FROM route_sheets ORDER BY created_at DESC');
+        // Solo obtener las hojas de ruta con estado 'sent' (enviado)
+        const result = await pool.query(`
+            SELECT id, nombreHojaRuta, status, situacion, created_at, fecha_recepcion, received, repartidor 
+            FROM route_sheets 
+            WHERE status = 'sent' 
+            ORDER BY created_at DESC
+        `);
         const routeSheets = result.rows;
 
         const detailsPromises = routeSheets.map(sheet => {
@@ -42,9 +48,9 @@ exports.viewAllRouteSheets = async (req, res) => {
                     });
 
                     return {
-                        id: sucursal.id, // ID del detalle de la sucursal
+                        id: sucursal.id,
                         sucursal: sucursal.sucursal,
-                        situacion: sucursal.situacion, // Agregar situación
+                        situacion: sucursal.situacion,
                         total_bultos: codigos.length,
                         clasificacion: clasificacion
                     };
@@ -62,6 +68,7 @@ exports.viewAllRouteSheets = async (req, res) => {
         res.status(500).send('Error al obtener las hojas de ruta.');
     }
 };
+
 
 // Controlador para actualizar la situación
 exports.updateSituacionSucursal = async (req, res) => {
@@ -162,3 +169,49 @@ exports.updateSituacion = async (req, res) => {
 
 
 
+// Controlador para marcar la sucursal como "Entregado" usando el checkbox
+exports.confirmarEntrega = async (req, res) => {
+    const { routeSheetId, sucursalId } = req.body;
+
+    try {
+        // Actualizar la situación de la sucursal a "Entregado"
+        await pool.query(`
+            UPDATE route_sheet_details 
+            SET situacion = 'Entregado' 
+            WHERE route_sheet_id = $1 AND sucursal = $2
+        `, [routeSheetId, sucursalId]);
+
+        res.status(200).send('Sucursal marcada como Entregado');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error al marcar la sucursal como Entregado');
+    }
+};
+
+
+
+// Función para marcar una hoja de ruta y todas sus sucursales como "En camino"
+exports.marcarHojaEnCamino = async (req, res) => {
+    const routeSheetId = req.params.routeSheetId;
+
+    try {
+        // Actualizar todas las sucursales de la hoja de ruta específica
+        await pool.query(`
+            UPDATE route_sheet_details
+            SET situacion = 'En camino'
+            WHERE route_sheet_id = $1
+        `, [routeSheetId]);
+
+        // Actualizar la hoja de ruta a 'En camino'
+        await pool.query(`
+            UPDATE route_sheets
+            SET situacion = 'En camino'
+            WHERE id = $1
+        `, [routeSheetId]);
+
+        res.status(200).send('Hoja de ruta y sucursales marcadas como En camino');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error al marcar la hoja de ruta como En camino');
+    }
+};

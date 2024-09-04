@@ -6,93 +6,77 @@
     <title>Vista de Reparto - Hojas de Ruta</title>
     <link rel="stylesheet" href="/css/reparto.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <style>
-        .situacion-en-preparacion {
-            background-color: lightyellow;
-        }
-        .situacion-listo-reparto {
-            background-color: lightblue;
-        }
-        .situacion-en-camino {
-            background-color: lightgreen;
-        }
-        .situacion-entregado {
-            background-color: lightcoral;
-        }
-    </style>
 </head>
 <body>
-    <h2>Vista Completa de Hojas de Ruta</h2>
+    <header>
+        <h2>Vista Completa de Hojas de Ruta</h2>
+    </header>
 
-    <div>
+    <div class="filter-container">
         <input type="text" id="dateFilter" placeholder="Filtrar por intervalo de fechas..." />
     </div>
 
-    <% if (routeSheets.length > 0) { %>
-        <% routeSheets.forEach(sheet => { %>
-            <div class="route-sheet" data-date="<%= new Date(sheet.created_at).toISOString().split('T')[0] %>">
-                <h3>Hoja de Ruta ID: <%= sheet.id %> - Estado: <%= sheet.status %> - Recibido: <%= sheet.received ? 'Sí' : 'No' %> - Situación General: <%= sheet.situacion %></h3>
-                <table border="1" id="table-<%= sheet.id %>">
-                    <thead>
-                        <tr>
-                            <th>Sucursal</th>
-                            <th>Total Bultos</th>
-                            <th>Situación</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% sheet.sucursales.forEach(sucursal => { %>
-                            <tr class="situacion-<%= sucursal.situacion.toLowerCase().replace(' ', '-') %>">
-                                <td><%= sucursal.sucursal %></td>
-                                <td><%= sucursal.total_bultos %></td>
-                                <td>
-                                    <!-- Se permite editar la situación libremente -->
-                                    <select onchange="cambiarSituacionSucursal('<%= sheet.id %>', '<%= sucursal.sucursal %>', this.value)">
-                                        <option value="En preparación" <%= sucursal.situacion === 'En preparación' ? 'selected' : '' %>>En preparación</option>
-                                        <option value="Listo para reparto" <%= sucursal.situacion === 'Listo para reparto' ? 'selected' : '' %>>Listo para reparto</option>
-                                        <option value="En camino" <%= sucursal.situacion === 'En camino' ? 'selected' : '' %>>En camino</option>
-                                        <option value="Entregado" <%= sucursal.situacion === 'Entregado' ? 'selected' : '' %>>Entregado</option>
-                                    </select>
-                                </td>
-                                <td><button onclick="toggleDetails('<%= sheet.id %>-<%= sucursal.sucursal %>')">Ver Detalles</button></td>
-                            </tr>
-                            <tr id="<%= sheet.id %>-<%= sucursal.sucursal %>" class="details" style="display:none;">
-                                <td colspan="4">
-                                    <table border="1">
-                                        <thead>
-                                            <tr>
-                                                <th>Tipo</th>
-                                                <th>Cantidad</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <% Object.entries(sucursal.clasificacion).forEach(([tipo, cantidad]) => { %>
+    <main>
+        <% if (routeSheets.length > 0) { %>
+            <% routeSheets.forEach(sheet => { %>
+                <section class="route-sheet" data-date="<%= new Date(sheet.created_at).toISOString().split('T')[0] %>">
+                    <header class="route-sheet-header">
+                        <h3>Hoja de Ruta ID: <%= sheet.id %></h3>
+                        <p><strong>Estado:</strong> <%= sheet.status %> | <strong>Recibido:</strong> <%= sheet.received ? 'Sí' : 'No' %> | <strong>Situación General:</strong> <%= sheet.situacion %></p>
+                    </header>
+
+                    <div class="action-buttons">
+                        <button class="btn primary" onclick="marcarHojaEnCamino('<%= sheet.id %>')">Marcar hoja como 'En camino'</button>
+                    </div>
+
+                    <table>
+                        <tbody>
+                            <% sheet.sucursales.forEach(sucursal => { %>
+                                <tr class="situacion-<%= sucursal.situacion.toLowerCase().replace(' ', '-') %>">
+                                    <td data-label="Sucursal"><%= sucursal.sucursal %></td>
+                                    <td data-label="Total Bultos"><%= sucursal.total_bultos %></td>
+                                    <td data-label="Acciones"><button class="btn" onclick="toggleDetails('<%= sheet.id %>-<%= sucursal.sucursal %>')">Ver Detalles</button></td>
+                                    <td data-label="Confirmar Entrega">
+                                        <input type="checkbox" onchange="confirmarEntrega('<%= sheet.id %>', '<%= sucursal.sucursal %>', this.checked)"
+                                            <%= sucursal.situacion === 'Entregado' ? 'checked disabled' : '' %>>
+                                    </td>
+                                </tr>
+                                <tr id="<%= sheet.id %>-<%= sucursal.sucursal %>" class="details" style="display:none;">
+                                    <td colspan="4">
+                                        <table>
+                                            <thead>
                                                 <tr>
-                                                    <td><%= tipo %></td>
-                                                    <td><%= cantidad %></td>
+                                                    <th>Tipo</th>
+                                                    <th>Cantidad</th>
                                                 </tr>
-                                            <% }); %>
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
-            </div>
-        <% }); %>
-    <% } else { %>
-        <p>No se encontraron hojas de ruta.</p>
-    <% } %>
+                                            </thead>
+                                            <tbody>
+                                                <% Object.entries(sucursal.clasificacion).forEach(([tipo, cantidad]) => { %>
+                                                    <tr>
+                                                        <td><%= tipo %></td>
+                                                        <td><%= cantidad %></td>
+                                                    </tr>
+                                                <% }); %>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </section>
+            <% }); %>
+        <% } else { %>
+            <p>No se encontraron hojas de ruta.</p>
+        <% } %>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
-        // Inicializar Flatpickr con rango de fechas
         flatpickr("#dateFilter", {
             mode: "range",
             dateFormat: "Y-m-d",
-            onChange: function(selectedDates, dateStr, instance) {
+            onChange: function(selectedDates) {
                 if (selectedDates.length === 2) {
                     filterByDateRange(selectedDates);
                 }
@@ -106,43 +90,45 @@
 
             sheets.forEach(sheet => {
                 const sheetDate = new Date(sheet.getAttribute('data-date'));
-
-                if (sheetDate >= startDate && sheetDate <= endDate) {
-                    sheet.style.display = "block";
-                } else {
-                    sheet.style.display = "none";
-                }
+                sheet.style.display = (sheetDate >= startDate && sheetDate <= endDate) ? "block" : "none";
             });
         }
 
         function toggleDetails(id) {
             const detailsElement = document.getElementById(id);
-            if (detailsElement.style.display === "none") {
-                detailsElement.style.display = "table-row";
-            } else {
-                detailsElement.style.display = "none";
+            detailsElement.style.display = detailsElement.style.display === "none" ? "table-row" : "none";
+        }
+
+        function confirmarEntrega(routeSheetId, sucursalId, isChecked) {
+            if (isChecked) {
+                fetch('/reparto/confirmar-entrega', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ routeSheetId, sucursalId })
+                }).then(response => {
+                    if (response.ok) {
+                        alert('Sucursal marcada como Entregado');
+                        location.reload();
+                    } else {
+                        alert('Error al marcar como Entregado');
+                    }
+                });
             }
         }
 
-        // Función para cambiar la situación de una sucursal
-        function cambiarSituacionSucursal(routeSheetId, sucursalId, nuevaSituacion) {
-    fetch('/reparto/update-situacion-sucursal', { // Corregí la ruta aquí
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ routeSheetId, sucursalId, nuevaSituacion })
-    }).then(response => {
-        if (response.ok) {
-            alert('Situación actualizada correctamente');
-            location.reload(); // Recargar la página para reflejar el cambio
-        } else {
-            alert('Error al actualizar la situación');
+        function marcarHojaEnCamino(routeSheetId) {
+            fetch(`/reparto/marcar-en-camino/${routeSheetId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            }).then(response => {
+                if (response.ok) {
+                    alert('Hoja de ruta y todas las sucursales marcadas como En camino');
+                    location.reload();
+                } else {
+                    alert('Error al marcar como En camino');
+                }
+            });
         }
-    });
-}
-
-
     </script>
 </body>
 </html>

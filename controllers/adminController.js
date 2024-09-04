@@ -361,7 +361,6 @@ exports.viewRouteSheet = async (req, res) => {
         res.send('Error al obtener los detalles de la hoja de ruta.');
     }
 };
-
 exports.viewRouteSheetGeneral = async (req, res) => {
     const routeSheetId = req.params.id;
 
@@ -376,11 +375,11 @@ exports.viewRouteSheetGeneral = async (req, res) => {
 
     try {
         const detailsResult = await pool.query(`
-            SELECT rsd.sucursal, array_agg(rss.codigo) as codigos
+            SELECT rsd.sucursal, rsd.situacion, array_agg(rss.codigo) as codigos
             FROM route_sheet_details rsd
             LEFT JOIN route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
             WHERE rsd.route_sheet_id = $1
-            GROUP BY rsd.sucursal
+            GROUP BY rsd.sucursal, rsd.situacion
         `, [routeSheetId]);
 
         let routeSheetDetails = [];
@@ -414,7 +413,8 @@ exports.viewRouteSheetGeneral = async (req, res) => {
                 cantidad_bultos: codigos.length,
                 refrigerados,
                 cantidad_refrigerados: cantidadRefrigerados,
-                sucursalSummary
+                sucursalSummary,
+                situacion: detail.situacion // Agregar la situación de cada sucursal
             });
         });
 
@@ -428,6 +428,7 @@ exports.viewRouteSheetGeneral = async (req, res) => {
         res.send('Error al obtener los detalles de la hoja de ruta.');
     }
 };
+
 
 exports.editRouteSheetAdvanced = async (req, res) => {
     const routeSheetId = req.params.id;

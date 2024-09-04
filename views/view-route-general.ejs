@@ -23,8 +23,8 @@
                 <th>Encargado</th>
                 <th>Varios</th>
                 <th>Total Bultos</th>
+                <th>Situación</th> <!-- Nueva columna para la situación -->
                 <th>Acciones</th>
-            
             </tr>
         </thead>
         <tbody>
@@ -39,10 +39,10 @@
                     <td><%= detail.sucursalSummary["Encargado"] || 0 %></td>
                     <td><%= detail.sucursalSummary["Varios"] || 0 %></td>
                     <td><%= detail.cantidad_bultos %></td>
+                    <td><%= detail.situacion %></td> <!-- Mostrar la situación de cada sucursal -->
                     <td>
                         <a href="/admin/route-detail/<%= routeSheetId %>/<%= detail.sucursal %>">Ver Detalles</a>
                     </td>
-                
                 </tr>
                 <% }); %>
             <% } else { %>
@@ -53,8 +53,6 @@
         </tbody>
     </table>
     
-   
-
     <a href="/admin">Volver a mis hojas de ruta</a>
 
     <script>

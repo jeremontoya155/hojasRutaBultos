@@ -6,6 +6,12 @@ const repartoController = require('../controllers/repartoController');
 router.get('/view-all-routes', repartoController.viewAllRouteSheets);
 
 // Ruta para actualizar la situación de una sucursal
-router.post('/update-situacion-sucursal', repartoController.updateSituacionSucursal); // Ruta correcta
+router.post('/update-situacion-sucursal', repartoController.updateSituacionSucursal);
+
+// Ruta para confirmar entrega de una sucursal
+router.post('/confirmar-entrega', repartoController.confirmarEntrega);
+
+// Ruta para marcar una hoja de ruta como "En camino"
+router.post('/marcar-en-camino/:routeSheetId', repartoController.marcarHojaEnCamino);
 
 module.exports = router;

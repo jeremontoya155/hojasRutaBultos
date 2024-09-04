@@ -1,114 +1,171 @@
 /* Estilos generales */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f5f7fa;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f9f9f9;
     color: #333;
     margin: 0;
     padding: 20px;
     display: flex;
-    justify-content: center;
-    align-items: center;
     flex-direction: column;
-    min-height: 100vh;
+    align-items: center;
 }
 
 h2 {
-    font-size: 2rem;
-    color: #34495e;
-    margin-bottom: 20px;
+    font-size: 1.75rem;
+    color: #333;
+    margin-bottom: 15px;
     text-align: center;
+    font-weight: 600;
 }
 
-h3 {
-    font-size: 1.5rem;
-    color: #2980b9;
-    margin-bottom: 10px;
-}
-
-/* Estilos para las tablas */
-table {
+.filter-container {
     width: 100%;
-    max-width: 800px;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-    background-color: #fff;
-    border-radius: 10px;
+    max-width: 600px;
+    margin: 20px 0;
+}
+
+input#dateFilter {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+/* Estilos para las tarjetas (vista móvil) */
+.route-sheet {
+    background-color: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 600px;
     overflow: hidden;
 }
 
+.route-sheet h3 {
+    font-size: 1.25rem;
+    margin: 0 0 10px;
+    color: #2980b9;
+    font-weight: 600;
+}
+
+.route-sheet p {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-bottom: 15px;
+}
+
+/* Botones */
+button {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+button.btn.primary {
+    background-color: #2ecc71;
+}
+
+button.btn.primary:hover {
+    background-color: #27ae60;
+}
+
+/* Estilos para tablas en pantallas grandes */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+
 th, td {
-    padding: 15px;
     text-align: left;
+    padding: 10px;
     border-bottom: 1px solid #ddd;
 }
 
 th {
-    background-color: #34495e;
-    color: #fff;
+    background-color: #2980b9;
+    color: white;
+    text-transform: uppercase;
+}
+
+tr {
+    background-color: white;
+    transition: background-color 0.3s ease;
 }
 
 tr:hover {
     background-color: #f1f1f1;
 }
 
-/* Estilos para los enlaces */
-a {
-    color: #2980b9;
-    text-decoration: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    background-color: #ecf0f1;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-a:hover {
-    background-color: #2980b9;
-    color: #fff;
-}
-
-/* Estilos de la sección de información */
-p {
-    font-size: 1rem;
-    color: #7f8c8d;
-}
-
-/* Responsive Design */
+/* Vista móvil - Estilos en "cards" */
 @media (max-width: 768px) {
-    table, th, td {
+    table, thead, tbody, th, td, tr {
         display: block;
         width: 100%;
     }
 
-    th, td {
-        text-align: right;
-        padding: 10px;
-    }
-
-    th {
-        text-align: left;
-        background-color: #2c3e50;
+    thead {
+        display: none;
     }
 
     tr {
-        margin-bottom: 10px;
+        margin-bottom: 15px;
+        background-color: white;
+        border-radius: 12px;
+        padding: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    tr:hover {
-        background-color: transparent;
+    td {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        font-size: 1rem;
+        border-bottom: 1px solid #f1f1f1;
     }
 
+    td:last-child {
+        border-bottom: none;
+    }
+
+    td:before {
+        content: attr(data-label);
+        font-weight: bold;
+        color: #2980b9;
+        flex-basis: 50%;
+    }
+
+    /* Ajustes de tipografía */
     h2 {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
     }
 
     h3 {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
     }
 
-    a {
-        display: block;
-        text-align: center;
-        margin: 10px 0;
+    button {
+        width: 100%;
+        font-size: 1.1rem;
+        padding: 12px;
+    }
+
+    input#dateFilter {
+        font-size: 1.1rem;
     }
 }
