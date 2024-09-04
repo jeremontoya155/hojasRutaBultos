@@ -26,6 +26,7 @@ exports.getRouteSheets = async (req, res) => {
                 rs.fecha_recepcion, 
                 rs.received, 
                 rs.repartidor, 
+                rs.situacion,  -- Incluye la columna situacion
                 COALESCE(SUM(DISTINCT rsd.cantidad_bultos), 0) AS total_bultos, 
                 BOOL_OR(SUBSTRING(rss.codigo FROM 1 FOR 1) = '3') AS tiene_refrigerados
             FROM 
@@ -41,7 +42,8 @@ exports.getRouteSheets = async (req, res) => {
                 rs.created_at, 
                 rs.fecha_recepcion, 
                 rs.received, 
-                rs.repartidor
+                rs.repartidor, 
+                rs.situacion  -- Agrupa también por situacion
             ORDER BY 
                 rs.created_at DESC
         `);
@@ -56,24 +58,23 @@ exports.getRouteSheets = async (req, res) => {
 
 
 
-
-
-
 exports.createRouteSheet = async (req, res) => {
     const { repartidor, data } = req.body;
 
     try {
+        // Crear la hoja de ruta con la situación inicial "En preparación"
         const result = await pool.query(`
-            INSERT INTO route_sheets (status, repartidor) 
-            VALUES ($1, $2) 
+            INSERT INTO route_sheets (status, repartidor, situacion) 
+            VALUES ($1, $2, $3) 
             RETURNING id`, [
-            'pending',
-            repartidor
+            'pending',  // Estado inicial
+            repartidor,
+            'En preparación'  // Situación inicial
         ]);
 
         const routeSheetId = result.rows[0].id;
-
         const nombreHojaRuta = `Hoja de ruta ID ${routeSheetId}`;
+        
         await pool.query('UPDATE route_sheets SET nombreHojaRuta = $1 WHERE id = $2', [
             nombreHojaRuta,
             routeSheetId
@@ -82,6 +83,8 @@ exports.createRouteSheet = async (req, res) => {
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
+
+            // Insertar cada sucursal
             for (let sucursalData of data) {
                 const parsedData = JSON.parse(sucursalData);
                 const sucursal = parsedData.sucursal;
@@ -94,12 +97,13 @@ exports.createRouteSheet = async (req, res) => {
                     [routeSheetId, sucursal, cantidadBultos, false, 0]
                 );
 
-                // Verificar e insertar los códigos escaneados en `route_sheet_scans`
+                // Insertar los códigos escaneados en `route_sheet_scans`
                 const queryText = 'INSERT INTO route_sheet_scans (route_sheet_id, sucursal, codigo) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING';
                 for (let codigo of codigos) {
                     await client.query(queryText, [routeSheetId, sucursal, codigo]);
                 }
             }
+
             await client.query('COMMIT');
         } catch (err) {
             await client.query('ROLLBACK');
@@ -114,6 +118,7 @@ exports.createRouteSheet = async (req, res) => {
         res.send('Error al crear la hoja de ruta.');
     }
 };
+
 
 
 exports.receiveRouteSheet = async (req, res) => {
@@ -268,13 +273,21 @@ exports.sendRouteSheet = async (req, res) => {
     const routeSheetId = req.params.id;
 
     try {
-        await pool.query('UPDATE route_sheets SET status = $1 WHERE id = $2', ['sent', routeSheetId]);
-        res.redirect('/admin');
+        // Cambia el estado a "sent" y la situación a "Listo para reparto"
+        await pool.query(`
+            UPDATE route_sheets 
+            SET status = $1, situacion = $2 
+            WHERE id = $3`, 
+            ['sent', 'Listo para reparto', routeSheetId]
+        );
+
+        res.redirect('/admin'); // Redirige de vuelta al panel de administración
     } catch (err) {
         console.error(err);
         res.send('Error al enviar la hoja de ruta.');
     }
 };
+
 
 exports.loadRouteSheet = async (req, res) => {
     try {
@@ -300,10 +313,28 @@ exports.viewRouteSheetDetail = async (req, res) => {
     };
 
     try {
-        const detailsResult = await pool.query('SELECT id, codigo FROM route_sheet_scans WHERE route_sheet_id = $1 AND sucursal = $2', [id, sucursal]);
+        // Obtener los códigos escaneados de la sucursal en la hoja de ruta
+        const detailsResult = await pool.query(`
+            SELECT id, codigo 
+            FROM route_sheet_scans 
+            WHERE route_sheet_id = $1 
+            AND sucursal = $2
+        `, [id, sucursal]);
+
         const routeSheetDetails = detailsResult.rows;
 
-        res.render('view-route-detail', { routeSheetId: id, sucursal, routeSheetDetails, classificationCriteria });
+        // Clasificación de los códigos según el criterio
+        const classifiedDetails = routeSheetDetails.map(detail => ({
+            codigo: detail.codigo,
+            tipo: classificationCriteria[detail.codigo.charAt(0)] || "Desconocido"
+        }));
+
+        res.render('view-route-detail', { 
+            routeSheetId: id, 
+            sucursal, 
+            routeSheetDetails: classifiedDetails, 
+            classificationCriteria 
+        });
     } catch (err) {
         console.error(err);
         res.send('Error al obtener los detalles de la sucursal.');

@@ -6,6 +6,20 @@
     <title>Vista de Reparto - Hojas de Ruta</title>
     <link rel="stylesheet" href="/css/reparto.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        .situacion-en-preparacion {
+            background-color: lightyellow;
+        }
+        .situacion-listo-reparto {
+            background-color: lightblue;
+        }
+        .situacion-en-camino {
+            background-color: lightgreen;
+        }
+        .situacion-entregado {
+            background-color: lightcoral;
+        }
+    </style>
 </head>
 <body>
     <h2>Vista Completa de Hojas de Ruta</h2>
@@ -17,24 +31,34 @@
     <% if (routeSheets.length > 0) { %>
         <% routeSheets.forEach(sheet => { %>
             <div class="route-sheet" data-date="<%= new Date(sheet.created_at).toISOString().split('T')[0] %>">
-                <h3>Hoja de Ruta ID: <%= sheet.id %> - Estado: <%= sheet.status %> - Recibido: <%= sheet.received ? 'Sí' : 'No' %></h3>
+                <h3>Hoja de Ruta ID: <%= sheet.id %> - Estado: <%= sheet.status %> - Recibido: <%= sheet.received ? 'Sí' : 'No' %> - Situación General: <%= sheet.situacion %></h3>
                 <table border="1" id="table-<%= sheet.id %>">
                     <thead>
                         <tr>
                             <th>Sucursal</th>
                             <th>Total Bultos</th>
+                            <th>Situación</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <% sheet.sucursales.forEach(sucursal => { %>
-                            <tr>
+                            <tr class="situacion-<%= sucursal.situacion.toLowerCase().replace(' ', '-') %>">
                                 <td><%= sucursal.sucursal %></td>
                                 <td><%= sucursal.total_bultos %></td>
+                                <td>
+                                    <!-- Se permite editar la situación libremente -->
+                                    <select onchange="cambiarSituacionSucursal('<%= sheet.id %>', '<%= sucursal.sucursal %>', this.value)">
+                                        <option value="En preparación" <%= sucursal.situacion === 'En preparación' ? 'selected' : '' %>>En preparación</option>
+                                        <option value="Listo para reparto" <%= sucursal.situacion === 'Listo para reparto' ? 'selected' : '' %>>Listo para reparto</option>
+                                        <option value="En camino" <%= sucursal.situacion === 'En camino' ? 'selected' : '' %>>En camino</option>
+                                        <option value="Entregado" <%= sucursal.situacion === 'Entregado' ? 'selected' : '' %>>Entregado</option>
+                                    </select>
+                                </td>
                                 <td><button onclick="toggleDetails('<%= sheet.id %>-<%= sucursal.sucursal %>')">Ver Detalles</button></td>
                             </tr>
                             <tr id="<%= sheet.id %>-<%= sucursal.sucursal %>" class="details" style="display:none;">
-                                <td colspan="3">
+                                <td colspan="4">
                                     <table border="1">
                                         <thead>
                                             <tr>
@@ -99,6 +123,26 @@
                 detailsElement.style.display = "none";
             }
         }
+
+        // Función para cambiar la situación de una sucursal
+        function cambiarSituacionSucursal(routeSheetId, sucursalId, nuevaSituacion) {
+    fetch('/reparto/update-situacion-sucursal', { // Corregí la ruta aquí
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ routeSheetId, sucursalId, nuevaSituacion })
+    }).then(response => {
+        if (response.ok) {
+            alert('Situación actualizada correctamente');
+            location.reload(); // Recargar la página para reflejar el cambio
+        } else {
+            alert('Error al actualizar la situación');
+        }
+    });
+}
+
+
     </script>
 </body>
 </html>
