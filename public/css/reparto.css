@@ -4,79 +4,75 @@ body {
     background-color: #f9f9f9;
     color: #333;
     margin: 0;
-    padding: 20px;
+    padding: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     min-height: 100vh;
     width: 100%;
     box-sizing: border-box;
 }
 
 h2 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     color: #333;
-    margin-bottom: 15px;
+    margin: 10px 0;
     text-align: center;
     font-weight: 600;
 }
 
+/* Contenedor del filtro */
 .filter-container {
-    width: 100%;
-    max-width: 600px;
-    margin: 10px 0 20px 0;
+    width: 95%;
+    max-width: 500px;
+    margin: 10px auto;
+    box-sizing: border-box;
 }
 
 input#dateFilter {
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     font-size: 1rem;
     border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
+    border-radius: 5px;
+    margin-bottom: 15px;
 }
 
-/* Estilos para las tarjetas (route sheets) */
+/* Tarjetas de hoja de ruta */
 .route-sheet {
     background-color: white;
-    border-radius: 12px;
+    border-radius: 10px;
     padding: 15px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-    width: 100%;
-    max-width: 100%;
-    overflow: hidden;
-    box-sizing: border-box;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 95%;
+    max-width: 500px;
 }
 
 .route-sheet h3 {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     margin: 0 0 10px;
     color: #2980b9;
-    font-weight: 600;
 }
 
 .route-sheet p {
     font-size: 0.9rem;
     color: #7f8c8d;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 /* Botones */
 button {
     background-color: #3498db;
     color: white;
-    padding: 12px;
-    font-size: 1.1rem;
-    border-radius: 8px;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 5px;
     border: none;
     cursor: pointer;
     margin-bottom: 10px;
-    transition: background-color 0.3s ease;
     width: 100%;
-    max-width: none; /* Quitar límite de ancho */
 }
 
 button:hover {
@@ -91,139 +87,35 @@ button.btn.primary:hover {
     background-color: #27ae60;
 }
 
-/* Estilos para tablas */
+/* Tablas */
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 th, td {
     text-align: left;
-    padding: 10px;
+    padding: 8px;
     border-bottom: 1px solid #ddd;
 }
 
 th {
     background-color: #2980b9;
     color: white;
-    text-transform: uppercase;
 }
 
-tr {
-    background-color: white;
-    transition: background-color 0.3s ease;
-}
-
-tr:hover {
-    background-color: #f1f1f1;
-}
-
-/* Ajustes para pantallas grandes */
-@media (min-width: 769px) {
-    .route-sheet {
-        max-width: 800px;
-    }
-
-    button {
-        max-width: 300px;
-    }
-}
-
-/* Vista móvil - Estilos en "cards" para dispositivos pequeños */
 @media (max-width: 768px) {
-    table, thead, tbody, th, td, tr {
-        display: block;
-        width: 100%;
-    }
-
-    thead {
-        display: none;
-    }
-
-    tr {
-        margin-bottom: 15px;
-        background-color: white;
-        border-radius: 12px;
-        padding: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    td {
-        display: flex;
-        justify-content: space-between;
-        padding: 10px;
-        font-size: 1rem;
-        border-bottom: 1px solid #f1f1f1;
-    }
-
-    td:before {
-        content: attr(data-label);
-        font-weight: bold;
-        color: #2980b9;
-        flex-basis: 50%;
-    }
-
-    td:last-child {
-        border-bottom: none;
-    }
-
-    /* Ajustes de tipografía */
     h2 {
-        font-size: 1.5rem;
-    }
-
-    h3 {
         font-size: 1.2rem;
     }
 
-    button {
-        width: 100%;
-        font-size: 1.1rem;
-        padding: 12px;
+    h3 {
+        font-size: 1rem;
     }
 
-    input#dateFilter {
-        font-size: 1.1rem;
-    }
-
-    .route-sheet {
-        padding: 12px;
-    }
-
-    /* Ajuste de márgenes */
-    .filter-container {
-        margin: 5px 0;
-    }
-}
-
-/* Mejoras para que los botones no se corten */
-button {
-    display: inline-block;
-    padding: 10px 15px;
-    font-size: 1rem;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    width: auto; /* Asegura que el ancho sea adaptable */
-}
-
-/* Ocultar texto cuando el espacio es muy reducido */
-@media (max-width: 480px) {
     button {
         font-size: 0.9rem;
-        padding: 8px 12px;
-    }
-
-    td {
-        font-size: 0.85rem;
-    }
-
-    h2 {
-        font-size: 1.3rem;
-    }
-
-    h3 {
-        font-size: 1.1rem;
     }
 
     input#dateFilter {

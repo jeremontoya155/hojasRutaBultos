@@ -20,25 +20,24 @@
         <% if (routeSheets.length > 0) { %>
             <% routeSheets.forEach(sheet => { %>
                 <section class="route-sheet" data-date="<%= new Date(sheet.created_at).toISOString().split('T')[0] %>">
-                    <header class="route-sheet-header">
-                        <h3>Hoja de Ruta ID: <%= sheet.id %></h3>
-                        <p><strong>Estado:</strong> <%= sheet.status %> | <strong>Recibido:</strong> <%= sheet.received ? 'Sí' : 'No' %> | <strong>Situación General:</strong> <%= sheet.situacion %></p>
-                    </header>
+                    <h3>Hoja de Ruta ID: <%= sheet.id %></h3>
+                    <p><strong>Estado:</strong> <%= sheet.status %> | <strong>Recibido:</strong> <%= sheet.received ? 'Sí' : 'No' %> | <strong>Situación General:</strong> <%= sheet.situacion %></p>
 
-                    <div class="action-buttons">
-                        <button class="btn primary" onclick="marcarHojaEnCamino('<%= sheet.id %>')">Marcar hoja como 'En camino'</button>
-                    </div>
+                    <button class="btn primary" onclick="marcarHojaEnCamino('<%= sheet.id %>')">Marcar hoja como 'En camino'</button>
 
                     <table>
                         <tbody>
                             <% sheet.sucursales.forEach(sucursal => { %>
-                                <tr class="situacion-<%= sucursal.situacion.toLowerCase().replace(' ', '-') %>">
-                                    <td data-label="Sucursal"><%= sucursal.sucursal %></td>
-                                    <td data-label="Total Bultos"><%= sucursal.total_bultos %></td>
-                                    <td data-label="Acciones"><button class="btn" onclick="toggleDetails('<%= sheet.id %>-<%= sucursal.sucursal %>')">Ver Detalles</button></td>
-                                    <td data-label="Confirmar Entrega">
+                                <tr>
+                                    <td><strong>Sucursal:</strong> <%= sucursal.sucursal %></td>
+                                    <td><strong>Total Bultos:</strong> <%= sucursal.total_bultos %></td>
+                                    <td>
+                                        <button class="btn" onclick="toggleDetails('<%= sheet.id %>-<%= sucursal.sucursal %>')">Ver Detalles</button>
+                                    </td>
+                                    <td>
                                         <input type="checkbox" onchange="confirmarEntrega('<%= sheet.id %>', '<%= sucursal.sucursal %>', this.checked)"
                                             <%= sucursal.situacion === 'Entregado' ? 'checked disabled' : '' %>>
+                                        Confirmar Entrega
                                     </td>
                                 </tr>
                                 <tr id="<%= sheet.id %>-<%= sucursal.sucursal %>" class="details" style="display:none;">
@@ -132,3 +131,4 @@
     </script>
 </body>
 </html>
+
