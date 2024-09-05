@@ -111,31 +111,49 @@ exports.viewRouteSheet = async (req, res) => {
 
 // Marcar como recibido
 exports.markAsReceived = async (req, res) => {
-    const routeSheetId = req.params.id;
-    const { sucursalId } = req.body; // Tomamos el ID de la sucursal desde el cuerpo de la solicitud
+    const routeSheetId = req.params.id;  // ID de la hoja de ruta
     const user = req.session.user;
+    const sucursal = user.sucursal;  // Suponiendo que cada usuario tiene asociada una sucursal
 
     try {
-        // Obtener la hora actual en la zona horaria de Argentina
-        const fechaRecepcion = moment.tz("America/Argentina/Buenos_Aires").format('YYYY-MM-DD HH:mm:ss');
-
-        // Actualizar el estado de la sucursal a "Recibido Sucursal"
-        const result = await pool.query(`
+        // Actualizar la situación del pedido de la sucursal específica a "Recibido Sucursal"
+        await pool.query(`
             UPDATE route_sheet_details
-            SET situacion = 'Recibido Sucursal', fecha_entregado = $2
-            WHERE route_sheet_id = $1 AND sucursal = $3
-        `, [routeSheetId, fechaRecepcion, sucursalId]);
+            SET situacion = 'Recibido Sucursal'
+            WHERE route_sheet_id = $1 AND sucursal = $2
+        `, [routeSheetId, sucursal]);
 
-        if (result.rowCount > 0) {
-            res.status(200).json({ success: true });
-        } else {
-            res.status(403).json({ success: false, message: 'No tienes permiso para marcar esta sucursal como recibida.' });
+        // Verificar si todos los pedidos (sucursales) asociados a la hoja de ruta están en "Recibido Sucursal"
+        const result = await pool.query(`
+            SELECT COUNT(*) AS total_sucursales,
+                   COUNT(*) FILTER (WHERE situacion = 'Recibido Sucursal') AS recibidas
+            FROM route_sheet_details
+            WHERE route_sheet_id = $1
+        `, [routeSheetId]);
+
+        const { total_sucursales, recibidas } = result.rows[0];
+
+        // Si todas las sucursales están marcadas como "Recibido Sucursal", actualizar la hoja de ruta
+        if (total_sucursales === recibidas) {
+            // Obtener la hora actual en la zona horaria de Buenos Aires
+            const fechaRecepcion = new Date(); 
+
+            // Actualizar el estado de la hoja de ruta completa a "Recibido Sucursal" y la fecha de recepción
+            await pool.query(`
+                UPDATE route_sheets
+                SET situacion = 'Recibido Sucursal', fecha_recepcion = $2
+                WHERE id = $1
+            `, [routeSheetId, fechaRecepcion]);
         }
+
+        // Redirigir de vuelta a la página de rutas del usuario
+        res.redirect('/my-routes');
     } catch (err) {
         console.error(err);
-        res.status(500).json({ success: false, message: 'Error al actualizar el estado de la sucursal.' });
+        res.status(500).send('Error al marcar como recibida la sucursal.');
     }
 };
+
 
 
 // Cargar la página de carga de nuevas hojas de ruta

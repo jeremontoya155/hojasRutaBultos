@@ -54,39 +54,42 @@
                 <th>Acciones</th>
             </tr>
             <% routeSheets.forEach(sheet => { %>
-            <tr>
-                <td><%= sheet.nombrehojaruta %></td>
-                <td><%= new Date(sheet.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %></td>
-                <td>
-                    <% if (sheet.fecha_recepcion) { %>
-                        <%= new Date(sheet.fecha_recepcion).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %>
-                    <% } else { %>
-                        <span>-</span>
-                    <% } %>
-                </td>
-            
-                <td>
-                    <%= sheet.situacion %> <!-- Mostrar la situación aquí -->
-                </td>
-                <td><%= sheet.repartidor %></td>
-                <td><%= sheet.total_bultos %></td>
-                <td>
-                    <% if (sheet.tiene_refrigerados) { %>
-                        <span>Sí</span>
-                    <% } else { %>
-                        <span>No</span>
-                    <% } %>
-                </td>
-                <td>
-                    <% if (sheet.status === 'pending') { %>
-                        <a href="/admin/edit-route-advanced/<%= sheet.id %>">Editar</a> | 
-                        <a href="/admin/send-route/<%= sheet.id %>">Enviar</a>
-                    <% } else if (sheet.status === 'sent') { %>
-                        <span>Enviado</span> | 
-                        <a href="/admin/view-route-general/<%= sheet.id %>">Ver</a>
-                    <% } %>
-                </td>
-            </tr>
+        
+                <tr>
+                    <td><%= sheet.nombrehojaruta %></td>
+                    <td><%= new Date(sheet.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %></td>
+                    <td>
+                        <% if (sheet.fecha_recepcion) { %>
+                            <%= new Date(sheet.fecha_recepcion).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %>
+                        <% } else { %>
+                            <span>-</span>
+                        <% } %>
+                    </td>
+                    <td>
+                        <%= sheet.situacion %> <!-- Mostrar la situación aquí -->
+                    </td>
+                    <td><%= sheet.repartidor %></td>
+                    <td><%= sheet.total_bultos %></td>
+                    <td>
+                        <% if (sheet.tiene_refrigerados) { %>
+                            <span>Sí</span>
+                        <% } else { %>
+                            <span>No</span>
+                        <% } %>
+                    </td>
+                    <td>
+                        <% if (sheet.status === 'pending') { %>
+                            <a href="/admin/edit-route-advanced/<%= sheet.id %>">Editar</a> | 
+                            <a href="/admin/send-route/<%= sheet.id %>">Enviar</a>
+                        <% } else if (sheet.status === 'sent') { %>
+                            <span>Enviado</span> | 
+                            <a href="/admin/view-route-general/<%= sheet.id %>">Ver</a>
+                        <% } else if (sheet.situacion === 'Recibido Sucursal') { %>
+                            <span>Recibido</span> <!-- Muestra "Recibido" solo si todas las sucursales están recibidas -->
+                        <% } %>
+                    </td>
+                </tr>
+                
             <% }); %>
         </table>
         
