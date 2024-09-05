@@ -19,12 +19,12 @@ exports.getUserRouteSheets = async (req, res) => {
 
     try {
         const result = await pool.query(`
-            SELECT DISTINCT ON (rs.id) rs.*, rsd.sucursal, rss.codigo
+            SELECT DISTINCT ON (rs.id, rsd.sucursal) rs.*, rsd.sucursal, rsd.situacion, rsd.fecha_entregado, rss.codigo
             FROM route_sheets rs
             JOIN route_sheet_details rsd ON rs.id = rsd.route_sheet_id
             LEFT JOIN route_sheet_scans rss ON rs.id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
             WHERE rsd.sucursal = $1
-            ORDER BY rs.id, rs.created_at DESC
+            ORDER BY rs.id, rsd.sucursal, rs.created_at DESC
         `, [userSucursal]);
 
         const routeSheets = result.rows;
@@ -110,37 +110,34 @@ exports.viewRouteSheet = async (req, res) => {
 
 
 // Marcar como recibido
-// Marcar como recibido
 exports.markAsReceived = async (req, res) => {
     const routeSheetId = req.params.id;
+    const { sucursalId } = req.body; // Tomamos el ID de la sucursal desde el cuerpo de la solicitud
     const user = req.session.user;
 
     try {
         // Obtener la hora actual en la zona horaria de Argentina
         const fechaRecepcion = moment.tz("America/Argentina/Buenos_Aires").format('YYYY-MM-DD HH:mm:ss');
 
+        // Actualizar el estado de la sucursal a "Recibido Sucursal"
         const result = await pool.query(`
-            UPDATE route_sheets
-            SET received = TRUE, fecha_recepcion = $2
-            WHERE id = $1
-            AND EXISTS (
-                SELECT 1
-                FROM route_sheet_details
-                WHERE route_sheet_id = $1
-                AND sucursal = $3
-            )
-        `, [routeSheetId, fechaRecepcion, user.sucursal]);
+            UPDATE route_sheet_details
+            SET situacion = 'Recibido Sucursal', fecha_entregado = $2
+            WHERE route_sheet_id = $1 AND sucursal = $3
+        `, [routeSheetId, fechaRecepcion, sucursalId]);
 
         if (result.rowCount > 0) {
-            res.redirect('/my-routes');
+            res.status(200).json({ success: true });
         } else {
-            res.status(403).send('No tienes permiso para marcar esta hoja de ruta como recibida.');
+            res.status(403).json({ success: false, message: 'No tienes permiso para marcar esta sucursal como recibida.' });
         }
     } catch (err) {
         console.error(err);
-        res.status(500).send('Error al actualizar el estado de la hoja de ruta.');
+        res.status(500).json({ success: false, message: 'Error al actualizar el estado de la sucursal.' });
     }
 };
+
+
 // Cargar la página de carga de nuevas hojas de ruta
 exports.loadRouteSheet = (req, res) => {
     res.render('load-route');

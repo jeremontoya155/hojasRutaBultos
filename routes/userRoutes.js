@@ -11,4 +11,5 @@ router.get('/view-route/:id', userController.viewRouteSheet);
 // Ruta para marcar una hoja de ruta como recibida
 router.post('/mark-received/:id', userController.markAsReceived);
 
+
 module.exports = router;

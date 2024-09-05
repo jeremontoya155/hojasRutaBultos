@@ -30,49 +30,49 @@
             <tr>
                 <th>ID</th>
                 <th>Fecha de Creación</th>
-                <th>Estado</th>
-                <th>Fecha de Recepción</th>
                 <th>Sucursal</th>
+                <th>Situación</th> <!-- Ahora mostramos la situación de la sucursal -->
+                <th>Fecha de Recepción</th>
                 <th>Acciones</th>
+                <th>Marcar Recibido</th>
             </tr>
         </thead>
         <tbody>
             <% routeSheets.forEach(sheet => { %>
-            <tr>
-                <td><%= sheet.id %></td>
-                <td class="creation-date-cell"><%= new Date(sheet.created_at).toLocaleDateString('es-ES') %></td>
-                <td><%= sheet.status %></td>
-                <td>
-                    <% if (sheet.received) { %>
-                        <%= new Date(sheet.fecha_recepcion).toLocaleDateString('es-ES') %>
-                    <% } else { %>
-                        <span>-</span>
-                    <% } %>
-                </td>
-                <td><%= sheet.sucursal %></td>
-                <td>
-                    <a href="/my-routes/view-route/<%= sheet.id %>">Ver Detalles</a>
-                    <% if (sheet.status === 'sent' && !sheet.received) { %>
-                        | <form action="/my-routes/mark-received/<%= sheet.id %>" method="POST" style="display:inline;">
-                            <button type="submit">Marcar como Recibido</button>
-                        </form>
-                    <% } else if (sheet.received) { %>
-                        | <span>Recibido</span>
-                    <% } %>
-                </td>
-            </tr>
+                <tr>
+                    <td><%= sheet.id %></td>
+                    <td class="creation-date-cell"><%= new Date(sheet.created_at).toLocaleDateString('es-ES') %></td>
+                    <td><%= sheet.sucursal %></td>
+                    <td><%= sheet.situacion %></td> <!-- Mostramos la situación específica de la sucursal -->
+                    <td>
+                        <% if (sheet.fecha_entregado) { %>
+                            <%= new Date(sheet.fecha_entregado).toLocaleDateString('es-ES') %>
+                        <% } else { %>
+                            <span>-</span>
+                        <% } %>
+                    </td>
+                    <td>
+                        <a href="/my-routes/view-route/<%= sheet.id %>">Ver Detalles</a>
+                    </td>
+                    <td>
+                        <% if (sheet.situacion !== 'Recibido Sucursal') { %>
+                            <input type="checkbox" onchange="marcarRecibido('<%= sheet.id %>', '<%= sheet.sucursal %>')">
+                        <% } else { %>
+                            <span>Recibido</span>
+                        <% } %>
+                    </td>
+                </tr>
             <% }); %>
         </tbody>
     </table>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
-        // Inicializar Flatpickr con rango de fechas
         flatpickr("#dateFilter", {
             mode: "range",
             dateFormat: "d/m/Y",
-            onChange: function(selectedDates, dateStr, instance) {
-                if (selectedDates.length === 2) {  // Verificar que ambas fechas (desde y hasta) estén seleccionadas
+            onChange: function(selectedDates) {
+                if (selectedDates.length === 2) {
                     filterByDateRange(selectedDates);
                 }
             }
@@ -87,13 +87,30 @@
                 const dateCell = row.querySelector('.creation-date-cell');
                 if (dateCell) {
                     const [day, month, year] = dateCell.textContent.split('/');
-                    const rowDate = new Date(`${year}-${month}-${day}`); // Convertir la fecha a formato YYYY-MM-DD
+                    const rowDate = new Date(`${year}-${month}-${day}`);
 
                     if (rowDate >= startDate && rowDate <= endDate) {
                         row.style.display = "";
                     } else {
                         row.style.display = "none";
                     }
+                }
+            });
+        }
+
+        function marcarRecibido(routeSheetId, sucursalId) {
+            fetch(`/my-routes/mark-received/${routeSheetId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ sucursalId }) // Enviamos el ID de la sucursal
+            }).then(response => {
+                if (response.ok) {
+                    alert('Sucursal marcada como recibida');
+                    location.reload(); // Recargar para reflejar el cambio
+                } else {
+                    alert('Error al marcar como recibida');
                 }
             });
         }
