@@ -23,7 +23,8 @@
                 <th>Encargado</th>
                 <th>Varios</th>
                 <th>Total Bultos</th>
-                <th>Situación</th> <!-- Nueva columna para la situación -->
+                <th>Situación</th>
+                <th>Fecha de Recepción</th> <!-- Nueva columna para la fecha de recepción -->
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -39,7 +40,14 @@
                     <td><%= detail.sucursalSummary["Encargado"] || 0 %></td>
                     <td><%= detail.sucursalSummary["Varios"] || 0 %></td>
                     <td><%= detail.cantidad_bultos %></td>
-                    <td><%= detail.situacion %></td> <!-- Mostrar la situación de cada sucursal -->
+                    <td><%= detail.situacion %></td>
+                    <td>
+                        <% if (detail.fecha_recepcion) { %>
+                            <%= new Date(detail.fecha_recepcion).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %>
+                        <% } else { %>
+                            <span>-</span>
+                        <% } %>
+                    </td>
                     <td>
                         <a href="/admin/route-detail/<%= routeSheetId %>/<%= detail.sucursal %>">Ver Detalles</a>
                     </td>
@@ -47,7 +55,7 @@
                 <% }); %>
             <% } else { %>
                 <tr>
-                    <td colspan="10">No hay detalles disponibles para esta hoja de ruta.</td>
+                    <td colspan="11">No hay detalles disponibles para esta hoja de ruta.</td>
                 </tr>
             <% } %>
         </tbody>

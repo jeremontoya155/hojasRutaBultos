@@ -375,11 +375,11 @@ exports.viewRouteSheetGeneral = async (req, res) => {
 
     try {
         const detailsResult = await pool.query(`
-            SELECT rsd.sucursal, rsd.situacion, array_agg(rss.codigo) as codigos
+            SELECT rsd.sucursal, rsd.situacion, rsd.fecha_recepcion, array_agg(rss.codigo) as codigos
             FROM route_sheet_details rsd
             LEFT JOIN route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
             WHERE rsd.route_sheet_id = $1
-            GROUP BY rsd.sucursal, rsd.situacion
+            GROUP BY rsd.sucursal, rsd.situacion, rsd.fecha_recepcion
         `, [routeSheetId]);
 
         let routeSheetDetails = [];
@@ -390,7 +390,6 @@ exports.viewRouteSheetGeneral = async (req, res) => {
             let cantidadRefrigerados = 0;
             let refrigerados = false;
 
-            // Resumen por tipo
             let sucursalSummary = {};
 
             codigos.forEach(codigo => {
@@ -403,7 +402,6 @@ exports.viewRouteSheetGeneral = async (req, res) => {
                 }
             });
 
-            // Acumular resumen por tipo
             for (let tipo in sucursalSummary) {
                 summaryByType[tipo] = (summaryByType[tipo] || 0) + sucursalSummary[tipo];
             }
@@ -414,7 +412,8 @@ exports.viewRouteSheetGeneral = async (req, res) => {
                 refrigerados,
                 cantidad_refrigerados: cantidadRefrigerados,
                 sucursalSummary,
-                situacion: detail.situacion // Agregar la situación de cada sucursal
+                situacion: detail.situacion,
+                fecha_recepcion: detail.fecha_recepcion // Incluye la fecha de recepción de cada sucursal
             });
         });
 
