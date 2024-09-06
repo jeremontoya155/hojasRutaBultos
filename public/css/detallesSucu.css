@@ -54,6 +54,10 @@ header {
     text-align: left;
 }
 
+.link_detalle{
+    color: white;
+}
+
 .summary-table td, .detailed-table td {
     padding: 15px;
     text-align: left;

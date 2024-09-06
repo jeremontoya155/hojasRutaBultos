@@ -36,7 +36,6 @@
                 <tr>
                     <th>ID</th>
                     <th>Fecha de Creación</th>
-                    <th>Sucursal</th>
                     <th>Situación</th>
                     <th>Fecha de Recepción</th>
                     <th>Acciones</th>
@@ -48,7 +47,7 @@
                     <tr>
                         <td><%= sheet.id %></td>
                         <td class="creation-date-cell"><%= new Date(sheet.created_at).toLocaleDateString('es-ES') %></td>
-                        <td><%= sheet.sucursal %></td>
+                       
                         <td><%= sheet.situacion %></td>
                         <td>
                             <% if (sheet.fecha_entregado) { %>
@@ -58,7 +57,7 @@
                             <% } %>
                         </td>
                         <td>
-                            <button class="action-btn"><a href="/my-routes/view-route/<%= sheet.id %>">Ver Detalles</a></button>
+                            <button class="action-btn"><Strong><a class="link_detalle" href="/my-routes/view-route/<%= sheet.id %>">Ver Detalles</a></Strong></button>
                         </td>
                         <td>
                             <% if (sheet.situacion !== 'Recibido Sucursal') { %>

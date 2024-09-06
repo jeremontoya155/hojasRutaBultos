@@ -83,13 +83,16 @@ exports.viewRouteSheet = async (req, res) => {
         const result = await pool.query(query, params);
         const routeSheetDetails = result.rows;
 
-        // Resumir los tipos de códigos y contar refrigerados
+        // Resumir los tipos de códigos y contar los códigos de barra (total de bultos)
         let summaryByType = {};
         let detailedBreakdown = {};
+        let totalBultos = 0;  // Variable para el total de bultos basado en los códigos de barra
 
         routeSheetDetails.forEach(detail => {
             const codigo = detail.codigo;
             if (codigo) {
+                totalBultos++;  // Incrementamos el total de bultos (códigos de barra)
+
                 const tipo = classificationCriteria[codigo.charAt(0)] || "Desconocido";
                 summaryByType[tipo] = (summaryByType[tipo] || 0) + 1;
 
@@ -101,7 +104,8 @@ exports.viewRouteSheet = async (req, res) => {
             }
         });
 
-        res.render('view-route', { routeSheetId, summaryByType, detailedBreakdown });
+        // Renderizar la vista y pasar el total de bultos basado en los códigos de barra
+        res.render('view-route', { routeSheetId, summaryByType, detailedBreakdown, totalBultos });
     } catch (err) {
         console.error(err);
         res.status(500).send('Error al obtener los detalles de la hoja de ruta.');
