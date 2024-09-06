@@ -1,15 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const roleMiddleware = require('../middlewares/authMiddleware');
 
-// Ruta para obtener las hojas de ruta asignadas al usuario
-router.get('/', userController.getUserRouteSheets);
 
-// Ruta para ver los detalles de una hoja de ruta específica
-router.get('/view-route/:id', userController.viewRouteSheet);
-
-// Ruta para marcar una hoja de ruta como recibida
-router.post('/mark-received/:id', userController.markAsReceived);
-
+// Solo los usuarios con el rol "user" pueden acceder a estas rutas
+router.get('/', roleMiddleware(['user']), userController.getUserRouteSheets);
+router.get('/view-route/:id', roleMiddleware(['user']), userController.viewRouteSheet);
+router.post('/mark-received/:id', roleMiddleware(['user']), userController.markAsReceived);
 
 module.exports = router;

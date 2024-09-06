@@ -6,65 +6,72 @@
     <title>Mis Hojas de Ruta</title>
     <link rel="stylesheet" href="/css/user.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h2>Hojas de Ruta Asignadas a Sucursal <%= userSucursal %></h2>
+    <div class="container">
+        <header>
+            <h2>Hojas de Ruta Asignadas a Sucursal <%= userSucursal %></h2>
+        </header>
 
-    <h3>Resumen de Tipos de Códigos</h3>
-    <ul>
-        <% if (Object.keys(summaryByType).length > 0) { %>
-            <% for (let [tipo, cantidad] of Object.entries(summaryByType)) { %>
-                <li><%= tipo %>: <%= cantidad %></li>
-            <% } %>
-        <% } else { %>
-            <li>No hay datos de tipos de códigos disponibles.</li>
-        <% } %>
-    </ul>
+        <section class="summary-section">
+            <h3>Resumen de Tipos de Códigos</h3>
+            <ul class="summary-list">
+                <% if (Object.keys(summaryByType).length > 0) { %>
+                    <% for (let [tipo, cantidad] of Object.entries(summaryByType)) { %>
+                        <li><span class="code-type"><%= tipo %>:</span> <span class="code-amount"><%= cantidad %></span></li>
+                    <% } %>
+                <% } else { %>
+                    <li>No hay datos de tipos de códigos disponibles.</li>
+                <% } %>
+            </ul>
+        </section>
 
-    <div>
-        <input type="text" id="dateFilter" placeholder="Filtrar por intervalo de fechas..." />
-    </div>
+        <div class="filter-section">
+            <input type="text" id="dateFilter" placeholder="Filtrar por intervalo de fechas..." />
+        </div>
 
-    <table border="1" id="routeTable">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Fecha de Creación</th>
-                <th>Sucursal</th>
-                <th>Situación</th> <!-- Ahora mostramos la situación de la sucursal -->
-                <th>Fecha de Recepción</th>
-                <th>Acciones</th>
-                <th>Marcar Recibido</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% routeSheets.forEach(sheet => { %>
+        <table class="route-table" id="routeTable">
+            <thead>
                 <tr>
-                    <td><%= sheet.id %></td>
-                    <td class="creation-date-cell"><%= new Date(sheet.created_at).toLocaleDateString('es-ES') %></td>
-                    <td><%= sheet.sucursal %></td>
-                    <td><%= sheet.situacion %></td> <!-- Mostramos la situación específica de la sucursal -->
-                    <td>
-                        <% if (sheet.fecha_entregado) { %>
-                            <%= new Date(sheet.fecha_entregado).toLocaleDateString('es-ES') %>
-                        <% } else { %>
-                            <span>-</span>
-                        <% } %>
-                    </td>
-                    <td>
-                        <a href="/my-routes/view-route/<%= sheet.id %>">Ver Detalles</a>
-                    </td>
-                    <td>
-                        <% if (sheet.situacion !== 'Recibido Sucursal') { %>
-                            <input type="checkbox" onchange="marcarRecibido('<%= sheet.id %>', '<%= sheet.sucursal %>')">
-                        <% } else { %>
-                            <span>Recibido</span>
-                        <% } %>
-                    </td>
+                    <th>ID</th>
+                    <th>Fecha de Creación</th>
+                    <th>Sucursal</th>
+                    <th>Situación</th>
+                    <th>Fecha de Recepción</th>
+                    <th>Acciones</th>
+                    <th>Marcar Recibido</th>
                 </tr>
-            <% }); %>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <% routeSheets.forEach(sheet => { %>
+                    <tr>
+                        <td><%= sheet.id %></td>
+                        <td class="creation-date-cell"><%= new Date(sheet.created_at).toLocaleDateString('es-ES') %></td>
+                        <td><%= sheet.sucursal %></td>
+                        <td><%= sheet.situacion %></td>
+                        <td>
+                            <% if (sheet.fecha_entregado) { %>
+                                <%= new Date(sheet.fecha_entregado).toLocaleDateString('es-ES') %>
+                            <% } else { %>
+                                <span>-</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <button class="action-btn"><a href="/my-routes/view-route/<%= sheet.id %>">Ver Detalles</a></button>
+                        </td>
+                        <td>
+                            <% if (sheet.situacion !== 'Recibido Sucursal') { %>
+                                <input type="checkbox" onchange="marcarRecibido('<%= sheet.id %>', '<%= sheet.sucursal %>')">
+                            <% } else { %>
+                                <span class="received-tag">Recibido</span>
+                            <% } %>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
@@ -104,11 +111,11 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ sucursalId }) // Enviamos el ID de la sucursal
+                body: JSON.stringify({ sucursalId }) 
             }).then(response => {
                 if (response.ok) {
                     alert('Sucursal marcada como recibida');
-                    location.reload(); // Recargar para reflejar el cambio
+                    location.reload();
                 } else {
                     alert('Error al marcar como recibida');
                 }

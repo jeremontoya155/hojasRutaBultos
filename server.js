@@ -12,7 +12,9 @@ const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const userRoutes = require('./routes/userRoutes');
 const repartoRoutes = require('./routes/repartoRoutes');
-const authMiddleware = require('./middlewares/authMiddleware');
+
+// Importar middleware combinado de autenticación y roles
+const authAndRoleMiddleware = require('./middlewares/authMiddleware');
 
 // Configurar el motor de plantillas EJS
 app.set('view engine', 'ejs');
@@ -34,12 +36,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Rutas de autenticación
 app.use('/login', authRoutes);
-app.use('/', authRoutes); // Redirigir a las rutas de login
+app.use('/', authRoutes);  // Redirigir a las rutas de login
 
-// Rutas protegidas por middleware de autenticación
-app.use('/admin', authMiddleware, adminRoutes);
-app.use('/my-routes', authMiddleware, userRoutes);
-app.use('/reparto', authMiddleware, repartoRoutes); // Rutas de reparto
+// Rutas protegidas por autenticación y roles
+app.use('/admin', authAndRoleMiddleware(['admin']), adminRoutes);  // Requiere rol 'admin'
+app.use('/my-routes', authAndRoleMiddleware(), userRoutes);  // Solo requiere autenticación
+app.use('/reparto', authAndRoleMiddleware(['reparto']), repartoRoutes);  // Requiere rol 'reparto'
 
 // Captura de errores para rutas no encontradas
 app.use((req, res, next) => {

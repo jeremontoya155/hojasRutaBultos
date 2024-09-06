@@ -4,55 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/route-details.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <title>Detalles de Hoja de Ruta</title>
 </head>
 <body>
-    <h2>Detalles de la Hoja de Ruta ID: <%= routeSheetId %></h2>
+    <div class="container">
+        <header>
+            <h2>Detalles de la Hoja de Ruta: ID <%= routeSheetId %></h2>
+        </header>
 
-    <h3>Resumen de Tipos de Códigos</h3>
-    <ul>
-        <% if (Object.keys(summaryByType).length > 0) { %>
-            <% for (let [tipo, cantidad] of Object.entries(summaryByType)) { %>
-                <li><%= tipo %>: <%= cantidad %></li>
+        <section class="summary-section">
+            <div class="summary-box">
+                <h3>Resumen de Códigos</h3>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (Object.keys(summaryByType).length > 0) { %>
+                            <% for (let [tipo, cantidad] of Object.entries(summaryByType)) { %>
+                                <tr>
+                                    <td><%= tipo %></td>
+                                    <td><%= cantidad %></td>
+                                </tr>
+                            <% } %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="2">No hay datos disponibles</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="breakdown-section">
+            <h3>Desglose Detallado por Código</h3>
+            <% if (Object.keys(detailedBreakdown).length > 0) { %>
+                <div class="breakdown-container">
+                    <input class="search-input" type="text" placeholder="Buscar en códigos..." onkeyup="filterAllTables(this)" />
+                    <table class="detailed-table" id="detailed-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Código</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% for (let [tipo, codigos] of Object.entries(detailedBreakdown)) { %>
+                                <% codigos.forEach(codigo => { %>
+                                    <tr data-tipo="<%= tipo %>">
+                                        <td><%= tipo %></td>
+                                        <td><%= codigo %></td>
+                                    </tr>
+                                <% }); %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <p>No hay detalles disponibles.</p>
             <% } %>
-        <% } else { %>
-            <li>No hay datos de tipos de códigos disponibles.</li>
-        <% } %>
-    </ul>
+        </section>
 
-    <h3>Desglose Detallado</h3>
-    <% if (Object.keys(detailedBreakdown).length > 0) { %>
-        <% for (let [tipo, codigos] of Object.entries(detailedBreakdown)) { %>
-            <h4><%= tipo %></h4>
-            <input type="text" placeholder="Buscar por código de barras..." onkeyup="filterTable(this, 'table-<%= tipo %>')" />
-            <table border="1" id="table-<%= tipo %>">
-                <tr>
-                    <th>Código</th>
-                </tr>
-                <% codigos.forEach(codigo => { %>
-                <tr>
-                    <td><%= codigo %></td>
-                </tr>
-                <% }); %>
-            </table>
-        <% } %>
-    <% } else { %>
-        <p>No hay detalles disponibles.</p>
-    <% } %>
-
-    <a href="/my-routes">Volver a mis hojas de ruta</a>
+        <footer>
+            <button class="back-btn" onclick="window.location.href='/my-routes'">Volver a mis hojas de ruta</button>
+        </footer>
+    </div>
 
     <script>
-        function filterTable(input, tableId) {
+        function filterAllTables(input) {
             const filter = input.value.toUpperCase();
-            const table = document.getElementById(tableId);
-            const trs = table.getElementsByTagName("tr");
+            const table = document.getElementById('detailed-table');
+            const trs = table.getElementsByTagName('tr');
 
-            for (let i = 1; i < trs.length; i++) {
-                const td = trs[i].getElementsByTagName("td")[0];
-                if (td) {
-                    const txtValue = td.textContent || td.innerText;
-                    trs[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+            for (let i = 0; i < trs.length; i++) {
+                const tds = trs[i].getElementsByTagName('td');
+                const tipoText = tds[0] ? tds[0].textContent.toUpperCase() : "";
+                const codeText = tds[1] ? tds[1].textContent.toUpperCase() : "";
+
+                if (tipoText.includes(filter) || codeText.includes(filter)) {
+                    trs[i].style.display = "";
+                } else {
+                    trs[i].style.display = "none";
                 }
             }
         }
