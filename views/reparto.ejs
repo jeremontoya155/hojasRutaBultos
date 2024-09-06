@@ -23,7 +23,10 @@
                     <h3>Hoja de Ruta ID: <%= sheet.id %></h3>
                     <p><strong>Estado:</strong> <%= sheet.status %> | <strong>Recibido:</strong> <%= sheet.received ? 'Sí' : 'No' %> | <strong>Situación General:</strong> <%= sheet.situacion %></p>
 
-                    <button class="btn primary" onclick="marcarHojaEnCamino('<%= sheet.id %>')">Marcar hoja como 'En camino'</button>
+                    <!-- Mostrar el botón "En camino" solo si la situación es "Listo para reparto" -->
+                    <% if (sheet.situacion === 'Listo para reparto') { %>
+                        <button class="btn primary" onclick="marcarHojaEnCamino('<%= sheet.id %>')">Marcar hoja como 'En camino'</button>
+                    <% } %>
 
                     <table>
                         <tbody>
@@ -35,8 +38,11 @@
                                         <button class="btn" onclick="toggleDetails('<%= sheet.id %>-<%= sucursal.sucursal %>')">Ver Detalles</button>
                                     </td>
                                     <td>
-                                        <input type="checkbox" onchange="confirmarEntrega('<%= sheet.id %>', '<%= sucursal.sucursal %>', this.checked)"
-                                            <%= sucursal.situacion === 'Entregado' ? 'checked disabled' : '' %>>
+                                        <!-- Checkbox deshabilitado si la situación es "Entregado" o "Recibido Sucursal" -->
+                                        <input type="checkbox" 
+                                            onchange="confirmarEntrega('<%= sheet.id %>', '<%= sucursal.sucursal %>', this.checked)"
+                                            <%= sucursal.situacion === 'Entregado' || sucursal.situacion === 'Recibido Sucursal' ? 'disabled checked' : '' %>
+                                            <%= sucursal.situacion === 'En camino' ? '' : 'disabled' %>>
                                         Confirmar Entrega
                                     </td>
                                 </tr>
@@ -131,4 +137,3 @@
     </script>
 </body>
 </html>
-

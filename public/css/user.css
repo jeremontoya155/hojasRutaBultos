@@ -12,6 +12,10 @@ body {
     min-height: 100vh;
 }
 
+a{
+    text-decoration: none;
+}
+
 .container {
     width: 90%;
     max-width: 1200px;

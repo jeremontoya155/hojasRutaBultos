@@ -5,6 +5,7 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const cors = require('cors');  // Importar cors
 const app = express();
 
 // Importar rutas
@@ -18,6 +19,13 @@ const authAndRoleMiddleware = require('./middlewares/authMiddleware');
 
 // Configurar el motor de plantillas EJS
 app.set('view engine', 'ejs');
+
+// Middleware para habilitar CORS
+app.use(cors({
+    origin: '*',  // Permitir todas las peticiones de cualquier origen. Puedes restringir el dominio si es necesario.
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Métodos permitidos
+    allowedHeaders: ['Content-Type', 'Authorization'],  // Cabeceras permitidas
+}));
 
 // Middleware para procesar datos del formulario
 app.use(express.urlencoded({ extended: true }));
