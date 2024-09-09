@@ -53,20 +53,27 @@
             <h3>Desglose Detallado por Código</h3>
             <% if (Object.keys(detailedBreakdown).length > 0) { %>
                 <div class="breakdown-container">
-                    <input class="search-input" type="text" placeholder="Buscar en códigos..." onkeyup="filterAllTables(this)" />
+                    <% if (situacion !== 'Recibido Sucursal') { %>
+                        <input class="search-input" type="text" placeholder="Buscar en códigos..." onkeyup="filterAllTables(this)" />
+                        <input class="barcode-input" type="text" id="barcodeInput" placeholder="Escanear código de barras..." autofocus />
+                    <% } %>
                     <table class="detailed-table" id="detailed-table">
                         <thead>
                             <tr>
                                 <th>Tipo</th>
                                 <th>Código</th>
+                                <th>Recibido</th>
                             </tr>
                         </thead>
                         <tbody>
                             <% for (let [tipo, codigos] of Object.entries(detailedBreakdown)) { %>
-                                <% codigos.forEach(codigo => { %>
-                                    <tr data-tipo="<%= tipo %>">
+                                <% codigos.forEach(codigoObj => { %>
+                                    <tr data-tipo="<%= tipo %>" data-codigo="<%= codigoObj.codigo %>">
                                         <td><%= tipo %></td>
-                                        <td><%= codigo %></td>
+                                        <td><%= codigoObj.codigo %></td>
+                                        <td class="recibido-status">
+                                            <%= codigoObj.recibido === 'Recibido' ? 'Recibido' : '-' %>
+                                        </td>
                                     </tr>
                                 <% }); %>
                             <% } %>
@@ -77,13 +84,16 @@
                 <p>No hay detalles disponibles.</p>
             <% } %>
         </section>
-
+        
         <footer>
             <button class="back-btn" onclick="window.location.href='/my-routes'">Volver a mis hojas de ruta</button>
         </footer>
     </div>
 
     <script>
+        let scanTimeout = null;
+
+        // Filtrar códigos en la tabla
         function filterAllTables(input) {
             const filter = input.value.toUpperCase();
             const table = document.getElementById('detailed-table');
@@ -100,6 +110,51 @@
                     trs[i].style.display = "none";
                 }
             }
+        }
+
+        // Escaneo de código de barras con latencia
+        document.getElementById('barcodeInput').addEventListener('input', function(e) {
+            const scannedCode = e.target.value;
+
+            // Borrar el timeout anterior
+            if (scanTimeout) {
+                clearTimeout(scanTimeout);
+            }
+
+            // Establecer un timeout para procesar el código después de una pausa
+            scanTimeout = setTimeout(() => {
+                if (scannedCode) {
+                    fetch(`/my-routes/scan-code/<%= routeSheetId %>`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ codigo: scannedCode })
+                    }).then(response => {
+                        if (response.ok) {
+                            markAsReceived(scannedCode); // Marcar como recibido en la tabla
+                            alert('Código marcado como recibido');
+                        } else {
+                            alert('Error al procesar el código o no encontrado');
+                        }
+                    });
+                }
+
+                // Limpiar el campo para el siguiente escaneo
+                e.target.value = '';
+            }, 500);  // Latencia de 500ms para evitar que se envíe carácter por carácter
+        });
+
+        // Marcar como recibido en la tabla
+        function markAsReceived(codigo) {
+            const rows = document.querySelectorAll(`#detailed-table tbody tr`);
+            rows.forEach(row => {
+                if (row.getAttribute('data-codigo') === codigo) {
+                    row.style.backgroundColor = "#d4edda"; // Cambiar el color al marcar como recibido
+                    const recibidoCell = row.querySelector('.recibido-status');
+                    recibidoCell.textContent = "Recibido"; // Cambiar el estado a "Recibido"
+                }
+            });
         }
     </script>
 </body>

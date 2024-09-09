@@ -72,32 +72,19 @@ td {
     color: #34495e;
 }
 
-/* Filtro de búsqueda */
-.breakdown-container input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1rem;
-    box-sizing: border-box;
-}
-
-/* Estilos para los enlaces */
-a {
-    color: #2980b9;
-    text-decoration: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    background-color: #ecf0f1;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    margin-top: 20px;
-    display: inline-block;
-}
-
-a:hover {
-    background-color: #2980b9;
+/* Botón para marcar productos faltantes */
+.mark-missing-btn {
+    background-color: #e74c3c;
     color: #fff;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.mark-missing-btn:hover {
+    background-color: #c0392b;
 }
 
 /* Responsive Design */
@@ -127,11 +114,6 @@ a:hover {
 
     h2 {
         font-size: 1.75rem;
-    }
-
-    a {
-        display: inline-block;
-        margin: 5px 0;
     }
 
     .total-box {

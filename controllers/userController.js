@@ -46,7 +46,6 @@ exports.getUserRouteSheets = async (req, res) => {
     }
 };
 
-
 exports.viewRouteSheet = async (req, res) => {
     const routeSheetId = req.params.id;
     const user = req.session.user;
@@ -63,17 +62,15 @@ exports.viewRouteSheet = async (req, res) => {
     try {
         let query, params;
         if (user.role === 'admin') {
-            // Admin ve todas las líneas de la hoja de ruta
             query = `
-                SELECT rsd.*, rss.codigo 
+                SELECT rsd.*, rss.codigo, rss.recibido, rsd.situacion 
                 FROM route_sheet_details rsd
                 LEFT JOIN route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
                 WHERE rsd.route_sheet_id = $1`;
             params = [routeSheetId];
         } else {
-            // Usuarios de sucursales solo ven las líneas de su sucursal
             query = `
-                SELECT rsd.*, rss.codigo 
+                SELECT rsd.*, rss.codigo, rss.recibido, rsd.situacion 
                 FROM route_sheet_details rsd
                 LEFT JOIN route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
                 WHERE rsd.route_sheet_id = $1 AND rsd.sucursal = $2`;
@@ -83,34 +80,43 @@ exports.viewRouteSheet = async (req, res) => {
         const result = await pool.query(query, params);
         const routeSheetDetails = result.rows;
 
-        // Resumir los tipos de códigos y contar los códigos de barra (total de bultos)
         let summaryByType = {};
         let detailedBreakdown = {};
-        let totalBultos = 0;  // Variable para el total de bultos basado en los códigos de barra
+        let totalBultos = 0;
 
         routeSheetDetails.forEach(detail => {
             const codigo = detail.codigo;
             if (codigo) {
-                totalBultos++;  // Incrementamos el total de bultos (códigos de barra)
-
+                totalBultos++;
                 const tipo = classificationCriteria[codigo.charAt(0)] || "Desconocido";
                 summaryByType[tipo] = (summaryByType[tipo] || 0) + 1;
 
-                // Crear un desglose detallado por tipo
                 if (!detailedBreakdown[tipo]) {
                     detailedBreakdown[tipo] = [];
                 }
-                detailedBreakdown[tipo].push(codigo);
+                detailedBreakdown[tipo].push({
+                    codigo: codigo,
+                    recibido: detail.recibido || '-'
+                });
             }
         });
 
-        // Renderizar la vista y pasar el total de bultos basado en los códigos de barra
-        res.render('view-route', { routeSheetId, summaryByType, detailedBreakdown, totalBultos });
+        const situacion = routeSheetDetails.length > 0 ? routeSheetDetails[0].situacion : 'Desconocido';
+
+        res.render('view-route', { 
+            routeSheetId, 
+            summaryByType, 
+            detailedBreakdown, 
+            totalBultos, 
+            situacion 
+        });
     } catch (err) {
         console.error(err);
         res.status(500).send('Error al obtener los detalles de la hoja de ruta.');
     }
 };
+
+
 
 
 
@@ -165,4 +171,74 @@ exports.markAsReceived = async (req, res) => {
 // Cargar la página de carga de nuevas hojas de ruta
 exports.loadRouteSheet = (req, res) => {
     res.render('load-route');
+};
+
+
+exports.scanAndMarkReceived = async (req, res) => {
+    const routeSheetId = req.params.id;
+    const scannedCode = req.body.codigo;  // Código escaneado desde la pistola lectora
+    const user = req.session.user;
+    const sucursal = user.sucursal;
+
+    try {
+        // Verificar si el código escaneado existe en los detalles de la hoja de ruta
+        const result = await pool.query(`
+            SELECT * FROM route_sheet_scans 
+            WHERE route_sheet_id = $1 AND sucursal = $2 AND codigo = $3
+        `, [routeSheetId, sucursal, scannedCode]);
+
+        if (result.rows.length > 0) {
+            // Actualizar el campo recibido a "Recibido"
+            await pool.query(`
+                UPDATE route_sheet_scans 
+                SET recibido = 'Recibido' 
+                WHERE route_sheet_id = $1 AND sucursal = $2 AND codigo = $3
+            `, [routeSheetId, sucursal, scannedCode]);
+
+            // Verificar si todos los productos de la sucursal están marcados como "Recibido"
+            const statusCheck = await pool.query(`
+                SELECT COUNT(*) AS total_codigos,
+                       COUNT(*) FILTER (WHERE recibido = 'Recibido') AS recibidos
+                FROM route_sheet_scans
+                WHERE route_sheet_id = $1 AND sucursal = $2
+            `, [routeSheetId, sucursal]);
+
+            const { total_codigos, recibidos } = statusCheck.rows[0];
+
+            // Si todos los productos fueron recibidos, actualizar la situación de la sucursal
+            if (total_codigos === recibidos) {
+                await pool.query(`
+                    UPDATE route_sheet_details
+                    SET situacion = 'Recibido Sucursal', fecha_recepcion = $3
+                    WHERE route_sheet_id = $1 AND sucursal = $2
+                `, [routeSheetId, sucursal, moment.tz("America/Argentina/Buenos_Aires").format('YYYY-MM-DD HH:mm:ss')]);
+
+                // Verificar si todas las sucursales de la hoja de ruta están en "Recibido Sucursal"
+                const checkAllReceived = await pool.query(`
+                    SELECT COUNT(*) AS total_sucursales,
+                           COUNT(*) FILTER (WHERE situacion = 'Recibido Sucursal') AS sucursales_recibidas
+                    FROM route_sheet_details
+                    WHERE route_sheet_id = $1
+                `, [routeSheetId]);
+
+                const { total_sucursales, sucursales_recibidas } = checkAllReceived.rows[0];
+
+                if (total_sucursales === sucursales_recibidas) {
+                    // Actualizar el estado general de la hoja de ruta
+                    await pool.query(`
+                        UPDATE route_sheets
+                        SET situacion = 'Recibido Sucursal', fecha_recepcion = $2
+                        WHERE id = $1
+                    `, [routeSheetId, moment.tz("America/Argentina/Buenos_Aires").format('YYYY-MM-DD HH:mm:ss')]);
+                }
+            }
+
+            res.status(200).send({ message: 'Código marcado como recibido' });
+        } else {
+            res.status(404).send({ message: 'Código no encontrado en la sucursal' });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error al procesar el código de barras.');
+    }
 };

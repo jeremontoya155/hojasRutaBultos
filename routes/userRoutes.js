@@ -8,5 +8,6 @@ const roleMiddleware = require('../middlewares/authMiddleware');
 router.get('/', roleMiddleware(['user']), userController.getUserRouteSheets);
 router.get('/view-route/:id', roleMiddleware(['user']), userController.viewRouteSheet);
 router.post('/mark-received/:id', roleMiddleware(['user']), userController.markAsReceived);
+router.post('/scan-code/:id', roleMiddleware(['user']), userController.scanAndMarkReceived);
 
 module.exports = router;
