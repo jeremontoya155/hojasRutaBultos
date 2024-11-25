@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista de Reparto - Hojas de Ruta</title>
+    <link rel="stylesheet" href="/css/reparto.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body>
+    <header>
+        <h2>Vista Completa de Hojas de Ruta</h2>
+    </header>
+
+    <div class="filter-container">
+        <input type="text" id="dateFilter" placeholder="Filtrar por intervalo de fechas..." />
+    </div>
+
+    <main>
+        <% if (routeSheets.length > 0) { %>
+            <% routeSheets.forEach(sheet => { %>
+                <section class="route-sheet" data-date="<%= new Date(sheet.created_at).toISOString().split('T')[0] %>">
+                    <h3>Hoja de Ruta ID: <%= sheet.id %></h3>
+                    <p><strong>Estado:</strong> <%= sheet.status %> | <strong>Recibido:</strong> <%= sheet.received ? 'Sí' : 'No' %> | <strong>Situación General:</strong> <%= sheet.situacion %></p>
+
+                    <!-- Mostrar el botón "En camino" solo si la situación es "Listo para reparto" -->
+                    <% if (sheet.situacion === 'Listo para reparto') { %>
+                        <button class="btn primary" onclick="marcarHojaEnCamino('<%= sheet.id %>')">Marcar hoja como 'En camino'</button>
+                    <% } %>
+
+                    <table>
+                        <tbody>
+                            <% sheet.sucursales.forEach(sucursal => { %>
+                                <tr>
+                                    <td><strong>Sucursal:</strong> <%= sucursal.sucursal %></td>
+                                    <td><strong>Total Bultos:</strong> <%= sucursal.total_bultos %></td>
+                                    <td>
+                                        <button class="btn" onclick="toggleDetails('<%= sheet.id %>-<%= sucursal.sucursal %>')">Ver Detalles</button>
+                                    </td>
+                                    <td>
+                                        <!-- Checkbox deshabilitado si la situación es "Entregado" o "Recibido Sucursal" -->
+                                        <input type="checkbox" 
+                                            onchange="confirmarEntrega('<%= sheet.id %>', '<%= sucursal.sucursal %>', this.checked)"
+                                            <%= sucursal.situacion === 'Entregado' || sucursal.situacion === 'Recibido Sucursal' ? 'disabled checked' : '' %>
+                                            <%= sucursal.situacion === 'En camino' ? '' : 'disabled' %>>
+                                        Confirmar Entrega
+                                    </td>
+                                </tr>
+                                <tr id="<%= sheet.id %>-<%= sucursal.sucursal %>" class="details" style="display:none;">
+                                    <td colspan="4">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Tipo</th>
+                                                    <th>Cantidad</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% Object.entries(sucursal.clasificacion).forEach(([tipo, cantidad]) => { %>
+                                                    <tr>
+                                                        <td><%= tipo %></td>
+                                                        <td><%= cantidad %></td>
+                                                    </tr>
+                                                <% }); %>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </section>
+            <% }); %>
+        <% } else { %>
+            <p>No se encontraron hojas de ruta.</p>
+        <% } %>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        flatpickr("#dateFilter", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            onChange: function(selectedDates) {
+                if (selectedDates.length === 2) {
+                    filterByDateRange(selectedDates);
+                }
+            }
+        });
+
+        function filterByDateRange(dates) {
+            const startDate = dates[0];
+            const endDate = dates[1];
+            const sheets = document.querySelectorAll('.route-sheet');
+
+            sheets.forEach(sheet => {
+                const sheetDate = new Date(sheet.getAttribute('data-date'));
+                sheet.style.display = (sheetDate >= startDate && sheetDate <= endDate) ? "block" : "none";
+            });
+        }
+
+        function toggleDetails(id) {
+            const detailsElement = document.getElementById(id);
+            detailsElement.style.display = detailsElement.style.display === "none" ? "table-row" : "none";
+        }
+
+        function confirmarEntrega(routeSheetId, sucursalId, isChecked) {
+            if (isChecked) {
+                fetch('/reparto/confirmar-entrega', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ routeSheetId, sucursalId })
+                }).then(response => {
+                    if (response.ok) {
+                        alert('Sucursal marcada como Entregado');
+                        location.reload();
+                    } else {
+                        alert('Error al marcar como Entregado');
+                    }
+                });
+            }
+        }
+
+        function marcarHojaEnCamino(routeSheetId) {
+            fetch(`/reparto/marcar-en-camino/${routeSheetId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            }).then(response => {
+                if (response.ok) {
+                    alert('Hoja de ruta y todas las sucursales marcadas como En camino');
+                    location.reload();
+                } else {
+                    alert('Error al marcar como En camino');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

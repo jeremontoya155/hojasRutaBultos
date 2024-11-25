@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Hojas de Ruta</title>
+    <link rel="stylesheet" href="/css/user.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h2>Hojas de Ruta Asignadas a Sucursal <%= userSucursal %></h2>
+        </header>
+
+        <section class="summary-section">
+            <h3>Resumen de Tipos de Códigos</h3>
+            <ul class="summary-list">
+                <% if (Object.keys(summaryByType).length > 0) { %>
+                    <% for (let [tipo, cantidad] of Object.entries(summaryByType)) { %>
+                        <li><span class="code-type"><%= tipo %>:</span> <span class="code-amount"><%= cantidad %></span></li>
+                    <% } %>
+                <% } else { %>
+                    <li>No hay datos de tipos de códigos disponibles.</li>
+                <% } %>
+            </ul>
+        </section>
+
+        <div class="filter-section">
+            <input type="text" id="dateFilter" placeholder="Filtrar por intervalo de fechas..." />
+        </div>
+
+        <table class="route-table" id="routeTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha de Creación</th>
+                    <th>Situación</th>
+                    <th>Fecha de Recepción</th>
+                    <th>Acciones</th>
+                    <th>Marcar Recibido</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% routeSheets.forEach(sheet => { %>
+                    <tr>
+                        <td><%= sheet.id %></td>
+                        <td class="creation-date-cell"><%= new Date(sheet.created_at).toLocaleDateString('es-ES') %></td>
+                       
+                        <td><%= sheet.situacion %></td>
+                        <td>
+                            <% if (sheet.fecha_entregado) { %>
+                                <%= new Date(sheet.fecha_entregado).toLocaleDateString('es-ES') %>
+                            <% } else { %>
+                                <span>-</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <button class="action-btn"><Strong><a class="link_detalle" href="/my-routes/view-route/<%= sheet.id %>">Ver Detalles</a></Strong></button>
+                        </td>
+                        <td>
+                            <% if (sheet.situacion !== 'Recibido Sucursal') { %>
+                                <input type="checkbox" onchange="marcarRecibido('<%= sheet.id %>', '<%= sheet.sucursal %>')">
+                            <% } else { %>
+                                <span class="received-tag">Recibido</span>
+                            <% } %>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        flatpickr("#dateFilter", {
+            mode: "range",
+            dateFormat: "d/m/Y",
+            onChange: function(selectedDates) {
+                if (selectedDates.length === 2) {
+                    filterByDateRange(selectedDates);
+                }
+            }
+        });
+
+        function filterByDateRange(dates) {
+            const startDate = dates[0];
+            const endDate = dates[1];
+            const rows = document.querySelectorAll('#routeTable tbody tr');
+
+            rows.forEach(row => {
+                const dateCell = row.querySelector('.creation-date-cell');
+                if (dateCell) {
+                    const [day, month, year] = dateCell.textContent.split('/');
+                    const rowDate = new Date(`${year}-${month}-${day}`);
+
+                    if (rowDate >= startDate && rowDate <= endDate) {
+                        row.style.display = "";
+                    } else {
+                        row.style.display = "none";
+                    }
+                }
+            });
+        }
+
+        function marcarRecibido(routeSheetId, sucursalId) {
+            fetch(`/my-routes/mark-received/${routeSheetId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ sucursalId }) 
+            }).then(response => {
+                if (response.ok) {
+                    alert('Sucursal marcada como recibida');
+                    location.reload();
+                } else {
+                    alert('Error al marcar como recibida');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

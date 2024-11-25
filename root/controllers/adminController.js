@@ -5,8 +5,6 @@ const pool = new Pool({
 });
 
 
-const mysqlPool = require('../mysqlConnection');
-
 // Definición de classificationCriteria
 const classificationCriteria = {
     "1": "Cajas",
@@ -82,14 +80,6 @@ exports.createRouteSheet = async (req, res) => {
             routeSheetId
         ]);
 
-        // Consulta los remitos del día en la base de datos MySQL
-        const [remitos] = await mysqlPool.query(`
-            SELECT factcabecera.CliApeNom, factcabecera.Numero 
-            FROM factcabecera
-            WHERE factcabecera.Emision = CURDATE() 
-            AND factcabecera.Tipo = 'RM'
-        `);
-
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
@@ -97,21 +87,14 @@ exports.createRouteSheet = async (req, res) => {
             // Insertar cada sucursal
             for (let sucursalData of data) {
                 const parsedData = JSON.parse(sucursalData);
-                const sucursal = parsedData.sucursal; // Por ejemplo, "1"
+                const sucursal = parsedData.sucursal;
                 const codigos = parsedData.codigos;
                 const cantidadBultos = codigos.length;
 
-                // Buscar el remito asociado a la sucursal exacta (por número)
-                const remito = remitos.find(r => {
-                    const nombreParts = r.CliApeNom.trim().split(' ');
-                    const sucursalNumero = nombreParts[nombreParts.length - 1]; // Última parte del nombre
-                    return sucursalNumero === sucursal; // Comparar con el número de la sucursal
-                });
-
-                // Guardar los detalles en `route_sheet_details`, incluyendo `numero_remito`
+                // Guardar los detalles en `route_sheet_details`
                 await client.query(
-                    'INSERT INTO route_sheet_details (route_sheet_id, sucursal, cantidad_bultos, refrigerados, cantidad_refrigerados, numero_remito) VALUES ($1, $2, $3, $4, $5, $6)',
-                    [routeSheetId, sucursal, cantidadBultos, false, 0, remito?.Numero || null]
+                    'INSERT INTO route_sheet_details (route_sheet_id, sucursal, cantidad_bultos, refrigerados, cantidad_refrigerados) VALUES ($1, $2, $3, $4, $5)',
+                    [routeSheetId, sucursal, cantidadBultos, false, 0]
                 );
 
                 // Insertar los códigos escaneados en `route_sheet_scans`
@@ -392,11 +375,11 @@ exports.viewRouteSheetGeneral = async (req, res) => {
 
     try {
         const detailsResult = await pool.query(`
-            SELECT rsd.sucursal, rsd.situacion, rsd.fecha_recepcion, rsd.numero_remito, array_agg(rss.codigo) as codigos
+            SELECT rsd.sucursal, rsd.situacion, rsd.fecha_recepcion, array_agg(rss.codigo) as codigos
             FROM route_sheet_details rsd
             LEFT JOIN route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
             WHERE rsd.route_sheet_id = $1
-            GROUP BY rsd.sucursal, rsd.situacion, rsd.fecha_recepcion, rsd.numero_remito
+            GROUP BY rsd.sucursal, rsd.situacion, rsd.fecha_recepcion
         `, [routeSheetId]);
 
         let routeSheetDetails = [];
@@ -430,8 +413,7 @@ exports.viewRouteSheetGeneral = async (req, res) => {
                 cantidad_refrigerados: cantidadRefrigerados,
                 sucursalSummary,
                 situacion: detail.situacion,
-                fecha_recepcion: detail.fecha_recepcion,
-                numero_remito: detail.numero_remito // Incluir el número de remito aquí
+                fecha_recepcion: detail.fecha_recepcion // Incluye la fecha de recepción de cada sucursal
             });
         });
 
@@ -582,24 +564,5 @@ exports.updateRouteSheetAdvanced = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.send('Error al actualizar la hoja de ruta.');
-    }
-};
-
-//Remitos finales
-
-
-exports.getRemitos = async (req, res) => {
-    try {
-        const [rows] = await mysqlPool.query(`
-            SELECT factcabecera.CliApeNom, factcabecera.Numero 
-            FROM factcabecera
-            WHERE factcabecera.Emision = CURDATE() 
-            AND factcabecera.Tipo = 'RM'
-        `);
-
-        res.json(rows); // Devuelve los datos al cliente
-    } catch (err) {
-        console.error('Error al obtener remitos:', err);
-        res.status(500).send('Error al obtener los datos.');
     }
 };

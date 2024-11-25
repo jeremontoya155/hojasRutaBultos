@@ -62,5 +62,5 @@ console.log("Hora actual en Buenos Aires: ", new Date().toLocaleString("es-AR", 
 // Iniciar el servidor en el puerto definido en el archivo .env o en el puerto 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Attendance API running at http://localhost:${PORT}`);
+    console.log(`Servidor corriendo en el puerto ${PORT}`);
 });

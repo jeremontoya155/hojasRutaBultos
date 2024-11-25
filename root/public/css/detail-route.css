@@ -1,0 +1,205 @@
+/* General styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    margin: 0;
+}
+.contenedorBody{
+    margin: 1em;
+}
+.nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background-color: #34495e;
+    width:100%;
+    margin:0;
+}
+.nav h2{
+    color: #fff;
+    margin-left:50px;
+}
+
+/* Table styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background-color: #ffffff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+table thead {
+    background-color: #34495e;
+    color: #ffffff;
+}
+
+table th, table td {
+    padding: 12px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+table tbody tr:hover {
+    background-color: #ddd;
+}
+
+a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Filter input */
+#filterInput {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#noResults {
+    text-align: center;
+    font-size: 18px;
+    color: #e74c3c;
+    display: none;
+}
+
+
+
+/* Estilos específicos para la página de edición */
+.codigos-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.codigos-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.codigos-list li span {
+    flex-grow: 1;
+}
+
+.codigos-list li button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 5px 10px;
+    margin-left: 10px;
+}
+
+.codigos-list li button:hover {
+    background-color: #c0392b;
+}
+
+.codigos-list li i {
+    margin-right: 10px;
+    color: #3498db;
+}
+
+.nav h2 {
+    color: #fff;
+    margin-left: 50px;
+}
+
+form {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+h3 {
+    color: #007c98;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 1rem;
+}
+
+button[type="submit"], button[type="button"] {
+    background-color: #40b8d0;
+    color: #fff;
+    border: none;
+    border-radius: .6em;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: block;
+    margin: 0 auto;
+}
+
+button[type="submit"]:hover, button[type="button"]:hover {
+    background-color: #007c98;
+    transform: translateY(-2px);
+}
+
+.sucursal-detail {
+    margin-bottom: 20px;
+}
+
+
+/* Filter input and select */
+#filterInput, .filter-select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: #fff;
+}
+
+/* Opcional: estilo para el icono de flecha del select */
+.filter-select {
+    appearance: none; /* Eliminar el estilo por defecto del navegador */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M7%2010l5%205%205-5z%22/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: right 10px top 50%;
+    background-size: 16px;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #007c98;
+    box-shadow: 0 0 5px rgba(0, 124, 152, 0.5);
+}

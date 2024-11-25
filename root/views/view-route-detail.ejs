@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles de la Sucursal en la Hoja de Ruta</title>
+    <link rel="stylesheet" href="/css/detail-route.css"> 
+</head>
+<body>
+    
+    <div class="nav">
+        <h2>Detalles de la Sucursal <%= sucursal %> en la Hoja de Ruta ID: <%= routeSheetId %></h2>
+    </div>
+    <div class="contenedorBody">
+
+        <input type="text" id="filterInput" placeholder="Filtrar por código de barra...">
+        <select id="filterType" class="filter-select">
+            <option value="">Todos los tipos</option>
+            <% Object.keys(classificationCriteria).forEach(key => { %>
+                <option value="<%= classificationCriteria[key] %>"><%= classificationCriteria[key] %></option>
+            <% }); %>
+        </select>
+
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Código de Barra</th>
+                    <th>Tipo</th>
+                </tr>
+            </thead>
+            <tbody id="codeTable">
+                <% routeSheetDetails.forEach(detail => { 
+                    const tipo = classificationCriteria[detail.codigo.charAt(0)];
+                %>
+                <tr>
+                    <td><%= detail.codigo %></td>
+                    <td><%= tipo %></td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    
+        <p id="noResults">No se encontraron resultados.</p>
+    
+        <a href="/admin/view-route-general/<%= routeSheetId %>">Volver al Resumen General</a>
+    </div>
+
+    <script>
+        // Filtro de tabla por código de barra y por tipo
+        document.getElementById('filterInput').addEventListener('keyup', filterTable);
+        document.getElementById('filterType').addEventListener('change', filterTable);
+
+        function filterTable() {
+            const filterCode = document.getElementById('filterInput').value.toLowerCase();
+            const filterType = document.getElementById('filterType').value.toLowerCase();
+            const rows = document.querySelectorAll('#codeTable tr');
+            let visibleRows = 0;
+
+            rows.forEach(row => {
+                const codeCell = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                const typeCell = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+
+                if ((codeCell.includes(filterCode) || !filterCode) &&
+                    (typeCell.includes(filterType) || !filterType)) {
+                    row.style.display = '';
+                    visibleRows++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            document.getElementById('noResults').style.display = visibleRows ? 'none' : 'block';
+        }
+    </script>
+</body>
+</html>

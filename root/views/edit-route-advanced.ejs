@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Hoja de Ruta ID: <%= routeSheetId %></title>
+    <link rel="stylesheet" href="/css/edit-route.css">
+</head>
+<body>
+
+    <div class="nav">
+        <h2>Editar Hoja de Ruta ID: <%= routeSheetId %></h2>
+    </div>
+
+    <form id="routeSheetForm" action="/admin/update-route-advanced/<%= routeSheetId %>" method="POST">
+        <h3>Repartidor Asignado:</h3>
+        <p><%= assignedRepartidor.nombre %></p>
+
+        <h3>Detalles de Sucursales:</h3>
+        <div id="sucursales-container">
+            <% routeSheetDetails.forEach((detail, index) => { %>
+                <div class="sucursal-detail">
+                    <h4>Sucursal: <%= detail.sucursal %></h4>
+                    <label for="codigoInput_<%= index %>">Escanear Código de Barra:</label>
+                    <input type="text" id="codigoInput_<%= index %>" onkeypress="addBarcode(event, <%= index %>)">
+
+                    <table id="codigosTable_<%= index %>">
+                        <thead>
+                            <tr>
+                                <th>Código de Barra</th>
+                                <th>Categoría</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% detail.codigos.forEach(codigoObj => { %>
+                                <tr id="row_<%= index %>_<%= codigoObj.codigo %>">
+                                    <td><%= codigoObj.codigo %></td>
+                                    <td><%= codigoObj.categoria %></td>
+                                    <td><button type="button" onclick="removeCode(<%= index %>, '<%= codigoObj.codigo %>')">X</button></td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                    <input type="hidden" name="codigos_<%= index %>" id="codigos_<%= index %>" value="<%= detail.codigos.map(c => c.codigo).join(', ') %>">
+                    <input type="hidden" name="sucursal_<%= index %>" value="<%= detail.sucursal %>">
+
+                    <h5>Resumen de Códigos para Sucursal: <%= detail.sucursal %></h5>
+                    <table id="ResumenTipos_<%= index %>">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Cajas</td>
+                                <td><%= detail.sucursalSummary.Cajas %></td>
+                            </tr>
+                            <tr>
+                                <td>Cubetas</td>
+                                <td><%= detail.sucursalSummary.Cubetas %></td>
+                            </tr>
+                            <tr>
+                                <td>Refrigerado</td>
+                                <td><%= detail.sucursalSummary.Refrigerado %></td>
+                            </tr>
+                            <tr>
+                                <td>Bolsas</td>
+                                <td><%= detail.sucursalSummary.Bolsas %></td>
+                            </tr>
+                            <tr>
+                                <td>Encargado</td>
+                                <td><%= detail.sucursalSummary.Encargado %></td>
+                            </tr>
+                            <tr>
+                                <td>Varios</td>
+                                <td><%= detail.sucursalSummary.Varios %></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            <% }); %>
+        </div>
+
+        <input type="hidden" name="delete_codes" id="delete_codes"> <!-- Campo oculto para códigos eliminados -->
+
+        <button type="button" onclick="addNewSucursal()">Agregar Nueva Sucursal</button>
+
+        <div id="new-sucursal-container"></div>
+
+        <button type="submit" id="finalizeButton" >Finalizar y Guardar</button>
+    </form>
+
+    <a href="/admin">Volver a la Lista de Hojas de Ruta</a>
+
+    <script>
+        const classificationCriteria = {
+            "1": "Cajas",
+            "2": "Cubetas",
+            "3": "Refrigerado",
+            "4": "Bolsas",
+            "5": "Encargado",
+            "6": "Varios"
+        };
+
+        let deletedCodes = [];
+
+        function classifyBarcode(barcode) {
+            const firstChar = barcode.charAt(0);
+            return classificationCriteria[firstChar] || "Desconocido";
+        }
+
+        function addBarcode(event, index) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+
+                const input = document.getElementById(`codigoInput_${index}`);
+                const tableBody = document.querySelector(`#codigosTable_${index} tbody`);
+                const hiddenInput = document.getElementById(`codigos_${index}`);
+                const barcode = input.value.trim();
+
+                if (barcode && !document.getElementById(`row_${index}_${barcode}`)) {
+                    const classification = classifyBarcode(barcode);
+
+                    const row = document.createElement('tr');
+                    row.id = `row_${index}_${barcode}`;
+                    row.innerHTML = `
+                        <td>${barcode}</td>
+                        <td>${classification}</td>
+                        <td><button type="button" onclick="removeCode(${index}, '${barcode}')">X</button></td>
+                    `;
+
+                    tableBody.appendChild(row);
+                    updateHiddenInput(index);
+                    updateSummary(index, classification);
+
+                    input.value = ''; // Clear input after adding the barcode
+                } else {
+                    alert('Este código ya ha sido escaneado.');
+                }
+            }
+        }
+
+        function updateHiddenInput(index) {
+            const tableBody = document.querySelector(`#codigosTable_${index} tbody`);
+            const hiddenInput = document.getElementById(`codigos_${index}`);
+
+            const barcodes = Array.from(tableBody.querySelectorAll('tr')).map(row => row.cells[0].textContent);
+            hiddenInput.value = barcodes.join(', ');
+        }
+
+        function removeCode(index, code) {
+            const row = document.getElementById(`row_${index}_${code}`);
+            const classification = row.cells[1].textContent;
+            row.remove();
+            updateHiddenInput(index);
+            updateSummary(index, classification, -1);
+
+            // Añadir el código eliminado a la lista
+            deletedCodes.push(code);
+            document.getElementById('delete_codes').value = deletedCodes.join(', ');
+        }
+
+        function updateSummary(index, classification, count = 1) {
+            const summaryTable = document.getElementById(`ResumenTipos_${index}`);
+            const summaryRow = Array.from(summaryTable.querySelectorAll('tr')).find(row => row.cells[0].textContent === classification);
+            const summaryCell = summaryRow ? summaryRow.cells[1] : null;
+
+            if (summaryCell) {
+                const currentValue = parseInt(summaryCell.textContent, 10);
+                summaryCell.textContent = currentValue + count;
+            }
+        }
+
+        function addNewSucursal() {
+            const index = document.querySelectorAll('.sucursal-detail').length;
+            const container = document.getElementById('new-sucursal-container');
+
+            const sucursales = <%- JSON.stringify(sucursales) %>;
+
+            let optionsHtml = sucursales.map(sucursal => `
+                <option value="${sucursal}">${sucursal}</option>
+            `).join('');
+
+            const sucursalDiv = document.createElement('div');
+            sucursalDiv.classList.add('sucursal-detail');
+
+            sucursalDiv.innerHTML = `
+                <h4>Nueva Sucursal:</h4>
+                <label for="sucursal_${index}">Sucursal:</label>
+                <select name="sucursal_${index}" required>
+                    ${optionsHtml}
+                </select>
+                
+                <label for="codigoInput_${index}">Escanear Código de Barra:</label>
+                <input type="text" id="codigoInput_${index}" onkeypress="addBarcode(event, ${index})">
+
+                <table id="codigosTable_${index}">
+                    <thead>
+                        <tr>
+                            <th>Código de Barra</th>
+                            <th>Categoría</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <input type="hidden" name="codigos_${index}" id="codigos_${index}">
+                
+                <h5>Resumen de Códigos para Sucursal:</h5>
+                <table id="ResumenTipos_${index}">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Cajas</td><td>0</td></tr>
+                        <tr><td>Cubetas</td><td>0</td></tr>
+                        <tr><td>Refrigerado</td><td>0</td></tr>
+                        <tr><td>Bolsas</td><td>0</td></tr>
+                        <tr><td>Encargado</td><td>0</td></tr>
+                        <tr><td>Varios</td><td>0</td></tr>
+                    </tbody>
+                </table>
+            `;
+
+            container.appendChild(sucursalDiv);
+        }
+    </script>
+</body>
+</html>

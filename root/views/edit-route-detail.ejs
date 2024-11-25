@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Detalles de la Sucursal <%= sucursal %> en la Hoja de Ruta ID: <%= routeSheetId %></title>
+    <link rel="stylesheet" href="/css/edit-route-detail.css">
+</head>
+<body>
+    <h2>Editar Detalles de la Sucursal <%= sucursal %> en la Hoja de Ruta ID: <%= routeSheetId %></h2>
+
+    <form action="/admin/update-route-detail/<%= routeSheetId %>/<%= sucursal %>" method="POST" id="detailForm">
+        <h4>Códigos Escaneados</h4>
+        <input type="text" id="newCode" placeholder="Escanear nuevo código" autofocus>
+
+        <ul id="codeList">
+            <% routeSheetDetails.forEach(detail => { %>
+                <li>
+                    <input type="checkbox" name="delete_codes[]" value="<%= detail.id %>"> 
+                    <%= detail.codigo %>
+                </li>
+            <% }); %>
+        </ul>
+
+        <button type="button" id="addCode">Agregar Código</button>
+        <button type="submit" id="deleteSelected">Eliminar Códigos Seleccionados</button>
+        <button type="submit">Guardar Cambios</button>
+    </form>
+
+    <!-- Botón para volver a la vista de editar hoja de ruta -->
+    <form action="/admin/edit-route/<%= routeSheetId %>" method="GET">
+        <button type="submit">Volver a Editar Hoja de Ruta</button>
+    </form>
+
+    <script>
+        document.getElementById('addCode').addEventListener('click', function() {
+            const newCodeInput = document.getElementById('newCode');
+            const newCode = newCodeInput.value.trim();
+
+            if (newCode) {
+                const ul = document.getElementById('codeList');
+                const li = document.createElement('li');
+                li.innerHTML = `<input type="hidden" name="new_codes[]" value="${newCode}"> ${newCode}`;
+                ul.appendChild(li);
+
+                newCodeInput.value = '';
+                newCodeInput.focus();
+            } else {
+                alert("Por favor, ingrese un código válido.");
+            }
+        });
+
+        document.getElementById('deleteSelected').addEventListener('click', function() {
+            if (confirm("¿Estás seguro de que deseas eliminar los códigos seleccionados?")) {
+                document.getElementById('detailForm').submit();
+            }
+        });
+    </script>
+</body>
+</html>

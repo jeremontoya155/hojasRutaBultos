@@ -1,0 +1,192 @@
+/* Estilo general */
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #ffffff;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+h2 {
+    color: #000;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+/* Estilo del formulario */
+form {
+    background-color: #f9f9f9;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 0 auto;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+}
+
+form:hover {
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+}
+
+.route-line {
+    margin-bottom: 20px;
+}
+
+/* Estilo de los selectores */
+select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    font-size: 1rem;
+}
+
+select:focus {
+    border-color: #007aff;
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 122, 255, 0.2);
+}
+
+/* Estilo del botón para iniciar el escaneo */
+button {
+    background-color: #007aff;
+    color: #fff;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+    background-color: #005bb5;
+    transform: translateY(-2px);
+}
+
+/* Estilo de la sección de escaneo */
+#scanning-section {
+    background-color: #f0f0f0;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    border: 1px solid #e0e0e0;
+    overflow-y: auto;
+    max-height: 300px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#scanning-section:hover {
+    background-color: #ebebeb;
+}
+
+#scanning-section h4 {
+    margin-bottom: 15px;
+    color: #555;
+    font-size: 1.3rem;
+}
+
+/* Estilo de la lista de códigos escaneados */
+#codigoList {
+    list-style-type: none;
+    padding: 0;
+    margin: 15px 0;
+    overflow-y: auto;
+    max-height: 200px;
+}
+
+#codigoList li {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+#codigoList li:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+}
+
+/* Estilo del checkbox */
+.codigo-checkbox {
+    margin-right: 15px;
+}
+
+/* Estilo del botón de eliminar */
+#deleteSelected {
+    background-color: #ff3b30;
+    color: #fff;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 20px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: block;
+    width: 100%;
+}
+
+#deleteSelected:hover {
+    background-color: #ff1f1a;
+    transform: translateY(-3px);
+}
+
+#deleteSelected:active {
+    transform: translateY(0);
+}
+
+/* Ajuste para el botón dentro del recuadro */
+#delete-section {
+    display: none;
+    margin-top: 15px;
+}
+
+/* Estilo para el input de escaneo */
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="text"]:focus {
+    border-color: #007aff;
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 122, 255, 0.2);
+}
+
+/* Transiciones generales */
+* {
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+/* Efecto de desvanecimiento */
+.fade-out {
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+

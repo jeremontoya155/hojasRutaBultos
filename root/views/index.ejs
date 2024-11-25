@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido</title>
+</head>
+<body>
+    <h2>Bienvenido, <%= user.username %> - Rol: <%= user.role %></h2>
+
+    <% if (user.role === 'admin') { %>
+        <p>Esto es contenido exclusivo para administradores.</p>
+        <!-- Aquí puedes agregar más funcionalidades específicas para el rol de admin -->
+    <% } else if (user.role === 'manager') { %>
+        <p>Esto es contenido para managers.</p>
+        <!-- Aquí puedes agregar más funcionalidades específicas para el rol de manager -->
+    <% } else { %>
+        <p>Esto es contenido para usuarios normales.</p>
+        <!-- Aquí puedes agregar más funcionalidades específicas para usuarios -->
+    <% } %>
+</body>
+</html>

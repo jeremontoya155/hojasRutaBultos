@@ -1,0 +1,227 @@
+/* Estilos generales */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #34495e;
+    width: 100%;
+    margin: 0;
+}
+.nav h2 {
+    color: #fff;
+    margin-left: 50px;
+}
+
+/* Estilos de las pestañas */
+.tab-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 50px;
+}
+
+.tab-buttons button {
+    background-color: #40b8d0;
+    color: #fff;
+    border: none;
+    border-radius: .6em;
+    border-top-right-radius: 0;
+    padding: 10px 20px;
+    margin: 0 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.tab-buttons button:hover {
+    background-color: #007c98;
+    transform: translateY(-2px);
+}
+
+.tab-buttons button.active {
+    background-color: #007c98;
+}
+
+#historial h3 {
+    color: #007c98;
+    font-size: 1.7em;
+    margin: 0;
+}
+#historial button {
+    padding: 1em;
+    border-radius: 1em;
+    transition: all 0.7s ease;
+}
+#historial button:hover {
+    background-color: #555555;
+    color: #fff;
+    transform: translateY(-2px);
+}
+#historial .filter-row {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.7s ease;
+}
+
+#historial .filter-row.expanded {
+    max-height: 250px;
+}
+#historial .filter-row select,
+#historial .filter-row input {
+    border-radius: 1em;
+}
+
+.tituloHistorial {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: fit-content;
+    margin: 2em 10px;
+}
+
+/* Estilos para las tablas */
+table {
+    width: 90%;  /* Asegura que ambas tablas tengan el mismo ancho */
+    max-width: 1200px;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    height: auto;
+    margin-left: auto;  /* Centra horizontalmente */
+    margin-right: auto;
+}
+
+/* Estilos para las celdas de la tabla */
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    word-wrap: break-word;
+}
+
+th {
+    background-color: #34495e;
+    color: #fff;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Estilos para los enlaces de acciones */
+a {
+    color: #2980b9;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #1c6d9b;
+}
+
+/* Estilos de la sección activa */
+.tab.active {
+    display: block;
+}
+
+/* Estilos para la fila de filtros */
+.filter-row {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.filter-row select,
+.filter-row input {
+    padding: 10px;
+    width: calc(100% / 5 - 10px);
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.filter-row input::placeholder {
+    color: #888;
+}
+
+/* Estilos para la tabla en dispositivos móviles */
+@media (max-width: 768px) {
+    #historial {
+        width: 100%;
+        overflow-x: auto;
+    }
+    .nav {
+        flex-flow: column wrap;
+        text-align: center;
+    }
+    .nav h2 {
+        margin: 0;
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
+    .nav button {
+        border-radius: .5em;
+        margin: 0;
+        margin-bottom: 1em;
+    }
+    .tab-buttons {
+        margin: 0;
+    }
+    .filter-row {
+        flex-flow: column nowrap;
+        justify-content: center;
+        align-items: center;
+        margin-top: .5em;
+    }
+    .filter-row input,
+    .filter-row select {
+        width: 90%;
+        margin-bottom: 0.5em;
+    }
+}
+
+/* Estilos para el contenedor de detalles */
+#DetalleHojaRuta, #ResumenTipos {
+    margin-top: 2em;
+    max-width: 95%;
+    width: 90%;  /* Asegura que ambas tablas tengan el mismo ancho */
+    margin-left: auto;  /* Centra horizontalmente */
+    margin-right: auto;
+}
+
+h3 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+
+/* Efecto de desvanecimiento al salir */
+.fade-out {
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+/* Efecto de desvanecimiento al entrar */
+.fade-in {
+    opacity: 0;
+    animation: fadeInAnimation 1s forwards;
+}
+
+@keyframes fadeInAnimation {
+    to {
+        opacity: 1;
+    }
+}

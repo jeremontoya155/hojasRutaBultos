@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración - Hojas de Ruta</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css"> <!-- Enlace al CSS -->
+</head>
+<body>
+    <div class="nav">
+        <h2>EXPEDICIÓN</h2>
+        <div class="tab-buttons">
+            <!-- Botón para cargar nueva hoja de ruta, redirigiendo a la página de carga -->
+            <button onclick="window.location.href='/admin/load-route'"><i class="fas fa-plus"></i> Hoja de ruta</button>
+        </div>
+    </div>
+
+    <!-- Tab de Historial -->
+    <div id="historial" class="tab active">
+        <div class="tituloHistorial">
+            <h3>Historial</h3>
+            <button id="toggleButton" class="icon-button">
+                <i id="icon" class="fa-solid fa-arrow-down"></i>
+                <span id="buttonText">Mostrar Filtros</span>
+            </button>
+        </div>
+        <!-- Filtros en la parte superior de la tabla -->
+        <div class="filter-row" id="filterRow">
+            <input type="text" id="filterName" placeholder="Nombre de Hoja de ruta" onkeyup="filterTable()">
+            <input type="text" id="filterCreationDate" placeholder="Fecha de Creación" onkeyup="filterTable()">
+            <input type="text" id="filterReceptionDate" placeholder="Fecha de Recepción" onkeyup="filterTable()">
+            <select id="filterReceived" onchange="filterTable()">
+                <option value="">Todos</option>
+                <option value="recibido">Recibido</option>
+                <option value="en preparacion">En Preparacion</option>
+            </select>
+            
+            <input type="text" id="filterRepartidor" placeholder="Filtrar por Repartidor" onkeyup="filterTable()">
+            <!-- Filtro de Estado con un select -->
+           
+        </div>
+        
+        <table id="routeTable">
+            <tr>
+                <th>Nombre</th>
+                <th>Fecha de Creación</th>
+                <th>Fecha de Recepción</th>
+          
+                <th>Situación</th> <!-- Nueva columna de situación -->
+                <th>Repartidor</th>
+                <th>Total Bultos</th>
+                <th>Refrigerados</th>
+                <th>Acciones</th>
+            </tr>
+            <% routeSheets.forEach(sheet => { %>
+        
+                <tr>
+                    <td><%= sheet.nombrehojaruta %></td>
+                    <td><%= new Date(sheet.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %></td>
+                    <td>
+                        <% if (sheet.fecha_recepcion) { %>
+                            <%= new Date(sheet.fecha_recepcion).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) %>
+                        <% } else { %>
+                            <span>-</span>
+                        <% } %>
+                    </td>
+                    <td>
+                        <%= sheet.situacion %> <!-- Mostrar la situación aquí -->
+                    </td>
+                    <td><%= sheet.repartidor %></td>
+                    <td><%= sheet.total_bultos %></td>
+                    <td>
+                        <% if (sheet.tiene_refrigerados) { %>
+                            <span>Sí</span>
+                        <% } else { %>
+                            <span>No</span>
+                        <% } %>
+                    </td>
+                    <td>
+                        <% if (sheet.status === 'pending') { %>
+                            <a href="/admin/edit-route-advanced/<%= sheet.id %>">Editar</a> | 
+                            <a href="/admin/send-route/<%= sheet.id %>">Enviar</a>
+                        <% } else if (sheet.status === 'sent') { %>
+                            <span>Enviado</span> | 
+                            <a href="/admin/view-route-general/<%= sheet.id %>">Ver</a>
+                        <% } else if (sheet.situacion === 'Recibido Sucursal') { %>
+                            <span>Recibido</span> <!-- Muestra "Recibido" solo si todas las sucursales están recibidas -->
+                        <% } %>
+                    </td>
+                </tr>
+                
+            <% }); %>
+        </table>
+        
+    </div>
+
+    <script>
+        // Función para alternar entre pestañas
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Activa la primera pestaña por defecto
+        document.addEventListener('DOMContentLoaded', () => {
+            showTab('historial');
+        }); 
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const button = document.getElementById('toggleButton');
+            const filterRow = document.getElementById('filterRow');
+            const buttonText = document.getElementById('buttonText');
+            const icon = document.getElementById('icon');
+
+            button.addEventListener('click', function() {
+                // Alterna la clase 'expanded' en el div
+                filterRow.classList.toggle('expanded');
+                
+                // Cambia el texto y el icono del botón según el estado
+                if (filterRow.classList.contains('expanded')) {
+                    buttonText.textContent = 'Ocultar Filtros';
+                    icon.classList.remove('fa-arrow-down');
+                    icon.classList.add('fa-arrow-up');
+                } else {
+                    buttonText.textContent = 'Mostrar Filtros';
+                    icon.classList.remove('fa-arrow-up');
+                    icon.classList.add('fa-arrow-down');
+                }
+            });
+        });
+
+        // Función de filtro para la tabla
+        function filterTable() {
+            const filterName = document.getElementById('filterName').value.toLowerCase();
+            const filterCreationDate = document.getElementById('filterCreationDate').value.toLowerCase();
+            const filterReceptionDate = document.getElementById('filterReceptionDate').value.toLowerCase();
+            const filterReceived = document.getElementById('filterReceived').value.toLowerCase(); // Este es el filtro para el estado
+            const filterRepartidor = document.getElementById('filterRepartidor').value.toLowerCase();
+            const rows = document.querySelectorAll('#routeTable tr:not(:first-child)');
+
+            rows.forEach(row => {
+                const columns = row.querySelectorAll('td');
+                const name = columns[0].textContent.toLowerCase();
+                const creationDate = columns[1].textContent.toLowerCase();
+                const receptionDate = columns[2].textContent.toLowerCase();
+                const receivedText = columns[3].textContent.toLowerCase();  // Este es el texto en la columna de "Estado"
+                const repartidor = columns[4].textContent.toLowerCase();
+
+                // Comparación parcial para el estado, permitiendo coincidencias parciales
+                const matchesReceived = !filterReceived || receivedText.includes(filterReceived);
+
+                if (
+                    name.includes(filterName) &&
+                    creationDate.includes(filterCreationDate) &&
+                    receptionDate.includes(filterReceptionDate) &&
+                    matchesReceived &&
+                    repartidor.includes(filterRepartidor)
+                ) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Aplicar el efecto de fade-in cuando la página se carga
+            document.body.classList.add('fade-in');
+
+            // Función para aplicar fade-out y redirigir a la nueva página
+            function applyFadeOutAndRedirect(url) {
+                document.body.classList.add('fade-out');
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 1000); // Debe coincidir con la duración de la transición en CSS
+            }
+
+            // Asignar el evento de click al botón de "Cargar Hoja de Ruta"
+            const loadRouteButton = document.querySelector('.tab-buttons button');
+            if (loadRouteButton) {
+                loadRouteButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    applyFadeOutAndRedirect(loadRouteButton.getAttribute('onclick').split("'")[1]);
+                });
+            }
+
+            // Añadir el mismo efecto a otros enlaces de navegación si es necesario
+            document.querySelectorAll('a').forEach(anchor => {
+                anchor.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    applyFadeOutAndRedirect(anchor.href);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

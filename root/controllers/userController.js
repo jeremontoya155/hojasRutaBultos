@@ -46,7 +46,6 @@ exports.getUserRouteSheets = async (req, res) => {
     }
 };
 
-
 exports.viewRouteSheet = async (req, res) => {
     const routeSheetId = req.params.id;
     const user = req.session.user;
@@ -64,14 +63,14 @@ exports.viewRouteSheet = async (req, res) => {
         let query, params;
         if (user.role === 'admin') {
             query = `
-                SELECT rsd.*, rss.codigo, rss.recibido, rsd.situacion, rsd.numero_remito 
+                SELECT rsd.*, rss.codigo, rss.recibido, rsd.situacion 
                 FROM route_sheet_details rsd
                 LEFT JOIN route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
                 WHERE rsd.route_sheet_id = $1`;
             params = [routeSheetId];
         } else {
             query = `
-                SELECT rsd.*, rss.codigo, rss.recibido, rsd.situacion, rsd.numero_remito 
+                SELECT rsd.*, rss.codigo, rss.recibido, rsd.situacion 
                 FROM route_sheet_details rsd
                 LEFT JOIN route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
                 WHERE rsd.route_sheet_id = $1 AND rsd.sucursal = $2`;
@@ -102,9 +101,6 @@ exports.viewRouteSheet = async (req, res) => {
             }
         });
 
-        // Obtener el número de remito desde los detalles (si hay múltiples, tomar el primero)
-        const numeroRemito = routeSheetDetails.length > 0 ? routeSheetDetails[0].numero_remito : 'Sin asignar';
-
         const situacion = routeSheetDetails.length > 0 ? routeSheetDetails[0].situacion : 'Desconocido';
 
         res.render('view-route', { 
@@ -112,8 +108,7 @@ exports.viewRouteSheet = async (req, res) => {
             summaryByType, 
             detailedBreakdown, 
             totalBultos, 
-            situacion,
-            numeroRemito // Pasar el número de remito a la vista
+            situacion 
         });
     } catch (err) {
         console.error(err);
