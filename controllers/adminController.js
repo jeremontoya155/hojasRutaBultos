@@ -65,14 +65,12 @@ exports.createRouteSheet = async (req, res) => {
 
     try {
         // Crear la hoja de ruta con la situación inicial "En preparación"
-        const result = await pool.query(`
-            INSERT INTO route_sheets (status, repartidor, situacion) 
+        const result = await pool.query(
+            `INSERT INTO route_sheets (status, repartidor, situacion) 
             VALUES ($1, $2, $3) 
-            RETURNING id`, [
-            'pending',  // Estado inicial
-            repartidor,
-            'En preparación'  // Situación inicial
-        ]);
+            RETURNING id`,
+            ['pending', repartidor, 'En preparación']
+        );
 
         const routeSheetId = result.rows[0].id;
         const nombreHojaRuta = `Hoja de ruta ID ${routeSheetId}`;
@@ -86,7 +84,7 @@ exports.createRouteSheet = async (req, res) => {
         const [remitos] = await mysqlPool.query(`
             SELECT factcabecera.CliApeNom, factcabecera.Numero 
             FROM factcabecera
-            WHERE factcabecera.Emision = CURDATE() 
+            WHERE factcabecera.Emision ='2024-11-25'
             AND factcabecera.Tipo = 'RM'
         `);
 
@@ -94,24 +92,28 @@ exports.createRouteSheet = async (req, res) => {
         try {
             await client.query('BEGIN');
 
-            // Insertar cada sucursal
             for (let sucursalData of data) {
                 const parsedData = JSON.parse(sucursalData);
                 const sucursal = parsedData.sucursal; // Por ejemplo, "1"
                 const codigos = parsedData.codigos;
                 const cantidadBultos = codigos.length;
 
-                // Buscar el remito asociado a la sucursal exacta (por número)
-                const remito = remitos.find(r => {
+                // Filtrar remitos asociados a la sucursal
+                const remitosParaSucursal = remitos.filter(r => {
                     const nombreParts = r.CliApeNom.trim().split(' ');
                     const sucursalNumero = nombreParts[nombreParts.length - 1]; // Última parte del nombre
                     return sucursalNumero === sucursal; // Comparar con el número de la sucursal
                 });
 
-                // Guardar los detalles en `route_sheet_details`, incluyendo `numero_remito`
+                // Concatenar todos los números de remito en un solo string separado por "-"
+                const remitosConcatenados = remitosParaSucursal
+                    .map(remito => remito.Numero)
+                    .join('-');
+
+                // Guardar los detalles de la sucursal
                 await client.query(
                     'INSERT INTO route_sheet_details (route_sheet_id, sucursal, cantidad_bultos, refrigerados, cantidad_refrigerados, numero_remito) VALUES ($1, $2, $3, $4, $5, $6)',
-                    [routeSheetId, sucursal, cantidadBultos, false, 0, remito?.Numero || null]
+                    [routeSheetId, sucursal, cantidadBultos, false, 0, remitosConcatenados]
                 );
 
                 // Insertar los códigos escaneados en `route_sheet_scans`
