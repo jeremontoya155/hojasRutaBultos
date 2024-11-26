@@ -30,6 +30,12 @@
                     <option value="" disabled selected>Selecciona una sucursal</option>
                 </select>
             </div>
+
+            <!-- Sección de remitos -->
+            <div class="route-line" id="remitos-section" style="display: none;">
+                <h4>Seleccionar Remitos</h4>
+                <ul id="remitosList"></ul>
+            </div>
     
             <div class="route-line">
                 <button type="button" id="startScanning">Comenzar a Pistolear</button>
@@ -56,7 +62,10 @@
         <button type="button" id="deleteSelected">Eliminar Códigos Seleccionados</button>
     </div>
     
-    
+    <script>
+        // Variables para remitos disponibles
+        const remitosList = <%- JSON.stringify(remitosDisponibles || []) %>;
+    </script>
     <script src="/js/load.js"></script>
     
 </body>

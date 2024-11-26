@@ -64,7 +64,6 @@ exports.createRouteSheet = async (req, res) => {
     const { repartidor, data } = req.body;
 
     try {
-        // Crear la hoja de ruta con la situación inicial "En preparación"
         const result = await pool.query(
             `INSERT INTO route_sheets (status, repartidor, situacion) 
             VALUES ($1, $2, $3) 
@@ -74,19 +73,21 @@ exports.createRouteSheet = async (req, res) => {
 
         const routeSheetId = result.rows[0].id;
         const nombreHojaRuta = `Hoja de ruta ID ${routeSheetId}`;
-        
+
         await pool.query('UPDATE route_sheets SET nombreHojaRuta = $1 WHERE id = $2', [
             nombreHojaRuta,
             routeSheetId
         ]);
 
-        // Consulta los remitos del día en la base de datos MySQL
+        // Obtener los remitos del día
         const [remitos] = await mysqlPool.query(`
             SELECT factcabecera.CliApeNom, factcabecera.Numero 
             FROM factcabecera
-            WHERE factcabecera.Emision ='2024-11-25'
+            WHERE factcabecera.Emision = CURDATE()
             AND factcabecera.Tipo = 'RM'
         `);
+
+        console.log("Remitos disponibles:", remitos);
 
         const client = await pool.connect();
         try {
@@ -94,29 +95,37 @@ exports.createRouteSheet = async (req, res) => {
 
             for (let sucursalData of data) {
                 const parsedData = JSON.parse(sucursalData);
-                const sucursal = parsedData.sucursal; // Por ejemplo, "1"
+                const sucursal = parsedData.sucursal;
                 const codigos = parsedData.codigos;
-                const cantidadBultos = codigos.length;
+                const remitosSeleccionados = parsedData.remitos;
 
-                // Filtrar remitos asociados a la sucursal
-                const remitosParaSucursal = remitos.filter(r => {
-                    const nombreParts = r.CliApeNom.trim().split(' ');
-                    const sucursalNumero = nombreParts[nombreParts.length - 1]; // Última parte del nombre
-                    return sucursalNumero === sucursal; // Comparar con el número de la sucursal
-                });
+                console.log(`Sucursal: ${sucursal}, Remitos seleccionados:`, remitosSeleccionados);
 
-                // Concatenar todos los números de remito en un solo string separado por "-"
-                const remitosConcatenados = remitosParaSucursal
-                    .map(remito => remito.Numero)
-                    .join('-');
-
-                // Guardar los detalles de la sucursal
-                await client.query(
-                    'INSERT INTO route_sheet_details (route_sheet_id, sucursal, cantidad_bultos, refrigerados, cantidad_refrigerados, numero_remito) VALUES ($1, $2, $3, $4, $5, $6)',
-                    [routeSheetId, sucursal, cantidadBultos, false, 0, remitosConcatenados]
+                // Filtrar remitos válidos para la sucursal seleccionada
+                const remitosParaSucursal = remitos.filter(remito =>
+                    remito.CliApeNom.endsWith(` ${sucursal}`)
                 );
 
-                // Insertar los códigos escaneados en `route_sheet_scans`
+                console.log("Remitos asociados a la sucursal:", remitosParaSucursal);
+
+                const remitosValidos = remitosSeleccionados.filter(numero =>
+                    remitosParaSucursal.some(remito => remito.Numero.toString() === numero)
+                );
+
+                console.log("Remitos válidos para esta sucursal:", remitosValidos);
+
+                if (remitosSeleccionados.length !== remitosValidos.length) {
+                    console.error("Remitos no válidos:", remitosSeleccionados.filter(numero => !remitosValidos.includes(numero)));
+                    throw new Error('Uno o más remitos seleccionados no son válidos.');
+                }
+
+                const remitosConcatenados = remitosValidos.join('-');
+
+                await client.query(
+                    'INSERT INTO route_sheet_details (route_sheet_id, sucursal, cantidad_bultos, refrigerados, cantidad_refrigerados, numero_remito) VALUES ($1, $2, $3, $4, $5, $6)',
+                    [routeSheetId, sucursal, codigos.length, false, 0, remitosConcatenados]
+                );
+
                 const queryText = 'INSERT INTO route_sheet_scans (route_sheet_id, sucursal, codigo) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING';
                 for (let codigo of codigos) {
                     await client.query(queryText, [routeSheetId, sucursal, codigo]);
@@ -126,6 +135,7 @@ exports.createRouteSheet = async (req, res) => {
             await client.query('COMMIT');
         } catch (err) {
             await client.query('ROLLBACK');
+            console.error("Error al procesar la hoja de ruta:", err.message);
             throw err;
         } finally {
             client.release();
@@ -133,8 +143,8 @@ exports.createRouteSheet = async (req, res) => {
 
         res.redirect('/admin');
     } catch (err) {
-        console.error(err);
-        res.send('Error al crear la hoja de ruta.');
+        console.error("Error general:", err.message);
+        res.status(400).send(err.message);
     }
 };
 
@@ -311,12 +321,23 @@ exports.sendRouteSheet = async (req, res) => {
 exports.loadRouteSheet = async (req, res) => {
     try {
         const repartidores = await pool.query('SELECT * FROM repartidores');
-        res.render('load-route', { repartidores: repartidores.rows });
+        const [remitosDisponibles] = await mysqlPool.query(`
+            SELECT factcabecera.Numero, factcabecera.CliApeNom 
+            FROM factcabecera
+            WHERE factcabecera.Emision = CURDATE()
+            AND factcabecera.Tipo = 'RM'
+        `);
+
+        res.render('load-route', {
+            repartidores: repartidores.rows,
+            remitosDisponibles
+        });
     } catch (err) {
         console.error(err);
         res.send('Error al cargar la página de nueva hoja de ruta.');
     }
 };
+
 
 exports.viewRouteSheetDetail = async (req, res) => {
     const { id, sucursal } = req.params;
@@ -405,7 +426,8 @@ exports.viewRouteSheetGeneral = async (req, res) => {
         let summaryByType = {};
 
         detailsResult.rows.forEach(detail => {
-            const codigos = detail.codigos || [];
+            // Asegúrate de que `codigos` sea un array
+            const codigos = detail.codigos ? detail.codigos.filter(codigo => codigo !== null) : [];
             let cantidadRefrigerados = 0;
             let refrigerados = false;
 
@@ -433,7 +455,7 @@ exports.viewRouteSheetGeneral = async (req, res) => {
                 sucursalSummary,
                 situacion: detail.situacion,
                 fecha_recepcion: detail.fecha_recepcion,
-                numero_remito: detail.numero_remito // Incluir el número de remito aquí
+                numero_remito: detail.numero_remito
             });
         });
 
@@ -444,7 +466,7 @@ exports.viewRouteSheetGeneral = async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        res.send('Error al obtener los detalles de la hoja de ruta.');
+        res.status(500).send('Error al obtener los detalles de la hoja de ruta.');
     }
 };
 
@@ -603,5 +625,29 @@ exports.getRemitos = async (req, res) => {
     } catch (err) {
         console.error('Error al obtener remitos:', err);
         res.status(500).send('Error al obtener los datos.');
+    }
+};
+
+exports.updateRemitos = async (req, res) => {
+    const { id, sucursal } = req.params;
+    const { remitosSeleccionados } = req.body;
+
+    try {
+        const [remitos] = await mysqlPool.query(`SELECT factcabecera.Numero FROM factcabecera WHERE factcabecera.Emision = CURDATE() AND factcabecera.Tipo = 'RM'`);
+        const remitosValidos = remitosSeleccionados.filter(numero => remitos.some(r => r.Numero === numero));
+
+        if (remitosValidos.length !== remitosSeleccionados.length) {
+            return res.status(400).send('Algunos remitos seleccionados no son válidos.');
+        }
+
+        await pool.query(
+            'UPDATE route_sheet_details SET numero_remito = $1 WHERE route_sheet_id = $2 AND sucursal = $3',
+            [remitosValidos.join('-'), id, sucursal]
+        );
+
+        res.send('Remitos actualizados correctamente.');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error al actualizar los remitos.');
     }
 };
