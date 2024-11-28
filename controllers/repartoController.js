@@ -16,7 +16,7 @@ const classificationCriteria = {
 
 exports.viewAllRouteSheets = async (req, res) => {
     try {
-        // Solo obtener las hojas de ruta con estado 'sent' (enviado)
+        // Obtener hojas de ruta con estado "sent"
         const result = await pool.query(`
             SELECT id, nombreHojaRuta, status, situacion, created_at, fecha_recepcion, received, repartidor 
             FROM route_sheets 
@@ -27,35 +27,47 @@ exports.viewAllRouteSheets = async (req, res) => {
 
         const detailsPromises = routeSheets.map(sheet => {
             return pool.query(`
-                SELECT rsd.id, rsd.sucursal, rsd.situacion, array_agg(rss.codigo) as codigos
+                SELECT rsd.sucursal, rsd.situacion, array_agg(rss.codigo) as codigos
                 FROM route_sheet_details rsd
                 LEFT JOIN route_sheet_scans rss ON rsd.route_sheet_id = rss.route_sheet_id AND rsd.sucursal = rss.sucursal
                 WHERE rsd.route_sheet_id = $1
-                GROUP BY rsd.id, rsd.sucursal
+                GROUP BY rsd.sucursal, rsd.situacion
             `, [sheet.id]).then(result => {
                 const sucursales = result.rows;
 
-                // Procesar el total de bultos y la clasificación
-                sheet.sucursales = sucursales.map(sucursal => {
+                // Agrupar y combinar detalles por sucursal
+                const sucursalesAgrupadas = sucursales.reduce((acc, sucursal) => {
                     const codigos = sucursal.codigos || [];
                     let clasificacion = {};
 
                     codigos.forEach(codigo => {
-                        if (codigo) {  // Verificar que 'codigo' no sea null
+                        if (codigo) { // Verificar que no sea null
                             const tipo = classificationCriteria[codigo.charAt(0)] || "Desconocido";
                             clasificacion[tipo] = (clasificacion[tipo] || 0) + 1;
                         }
                     });
 
-                    return {
-                        id: sucursal.id,
-                        sucursal: sucursal.sucursal,
-                        situacion: sucursal.situacion,
-                        total_bultos: codigos.length,
-                        clasificacion: clasificacion
-                    };
-                });
+                    // Si la sucursal ya existe en el acumulador, combinar los detalles
+                    const existente = acc.find(item => item.sucursal === sucursal.sucursal);
+                    if (existente) {
+                        existente.total_bultos += codigos.length;
+                        for (const [tipo, cantidad] of Object.entries(clasificacion)) {
+                            existente.clasificacion[tipo] = (existente.clasificacion[tipo] || 0) + cantidad;
+                        }
+                    } else {
+                        // Si no existe, agregarla como una nueva entrada
+                        acc.push({
+                            sucursal: sucursal.sucursal,
+                            situacion: sucursal.situacion,
+                            total_bultos: codigos.length,
+                            clasificacion: clasificacion
+                        });
+                    }
 
+                    return acc;
+                }, []);
+
+                sheet.sucursales = sucursalesAgrupadas;
                 return sheet;
             });
         });
