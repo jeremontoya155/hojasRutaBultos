@@ -508,7 +508,7 @@ exports.editRouteSheetAdvanced = async (req, res) => {
                 "Varios": 0
             };
 
-            detail.codigos.forEach(codigo => {
+            (detail.codigos || []).forEach(codigo => {
                 const tipo = classificationCriteria[codigo.charAt(0)] || "Desconocido";
                 if (sucursalSummary[tipo] !== undefined) {
                     sucursalSummary[tipo]++;
@@ -517,7 +517,7 @@ exports.editRouteSheetAdvanced = async (req, res) => {
 
             return {
                 ...detail,
-                codigos: detail.codigos.map(codigo => ({
+                codigos: (detail.codigos || []).map(codigo => ({
                     codigo,
                     categoria: classificationCriteria[codigo.charAt(0)] || "Desconocido"
                 })),
@@ -525,19 +525,23 @@ exports.editRouteSheetAdvanced = async (req, res) => {
             };
         });
 
+        // Buscar el repartidor asignado
+        const assignedRepartidor = repartidores.find(rep => rep.nombre === routeSheet.repartidor) || { nombre: "No asignado" };
+
         res.render('edit-route-advanced', {
             routeSheetId,
             routeSheet,
             routeSheetDetails,
             repartidores,
             sucursales: repartidores.map(rep => rep.recorrido).flat(),
-            assignedRepartidor: repartidores.find(rep => rep.nombre === routeSheet.repartidor)
+            assignedRepartidor // Garantiza que siempre haya un objeto con al menos un campo `nombre`
         });
     } catch (err) {
         console.error(err);
-        res.send('Error al cargar la vista de edición avanzada.');
+        res.status(500).send('Error al cargar la vista de edición avanzada.');
     }
 };
+
 
 
 exports.updateRouteSheetAdvanced = async (req, res) => {
